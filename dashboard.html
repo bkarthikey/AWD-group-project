@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard | Space Colony</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="game-page">
+  <div class="space-bg"></div>
+
+  <nav class="navbar game-nav">
+    <a class="brand" href="index.html">🚀 <span>Space Colony</span></a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="upgrades.html">Upgrades</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="profile.html">Account</a>
+    </div>
+  </nav>
+
+  <main class="game-layout">
+    <aside class="hud-panel left-hud">
+      <h2>Colony Status</h2>
+
+      <div class="news-ticker" id="newsTicker">Colony news: command center waiting for your first harvest.</div>
+
+      <div class="stat-row">
+        <span>Oxygen Stability</span><strong id="oxygenStatus">72%</strong>
+      </div>
+      <div class="progress"><div class="fill cyan" style="width:72%"></div></div>
+
+      <div class="stat-row">
+        <span>Water Reserve</span><strong id="waterStatus">61%</strong>
+      </div>
+      <div class="progress"><div class="fill blue" style="width:61%"></div></div>
+
+      <div class="stat-row">
+        <span>Colony Power</span><strong id="powerStatus">48%</strong>
+      </div>
+      <div class="progress"><div class="fill amber" style="width:48%"></div></div>
+
+      <div class="mission-card">
+        <h3>Mission</h3>
+        <p id="missionText">Collect 250 total resources to unlock the next colony milestone.</p>
+        <div class="mission-progress">
+          <div class="mission-fill" id="missionFill"></div>
+        </div>
+        <strong id="missionReward">Reward: +20 of every resource</strong>
+      </div>
+
+      <div class="mission-card compact-stats">
+        <h3>Run Stats</h3>
+        <p>Combo <strong id="comboCount">x1</strong></p>
+        <p>Harvest power <strong id="clickPowerCount">1</strong></p>
+        <p>Colony score <strong id="scoreCount">0</strong></p>
+        <p>Resources per second <strong id="rateCount">0</strong></p>
+      </div>
+
+      <div class="mission-card achievements-card">
+        <h3>Achievements</h3>
+        <div class="achievement-list" id="achievementList"></div>
+      </div>
+    </aside>
+
+    <section class="planet-stage" id="planetStage">
+      <div class="resource-strip">
+        <div class="resource-pill">💨 Oxygen <strong id="oxygenCount">120</strong></div>
+        <div class="resource-pill">💧 Water <strong id="waterCount">90</strong></div>
+        <div class="resource-pill">💎 Minerals <strong id="mineralCount">180</strong></div>
+        <div class="resource-pill score-pill">⭐ Score <strong id="stageScore">0</strong></div>
+      </div>
+
+      <div class="sky-planet"></div>
+      <div class="far-mountains"></div>
+      <div class="near-mountains"></div>
+
+      <div class="colony-base">
+        <div class="base-dome"></div>
+        <div class="base-tower"></div>
+        <div class="base-light"></div>
+      </div>
+
+      <div class="resource-node oxygen-node">
+        <div class="oxygen-pod"></div>
+        <span>Oxygen</span>
+      </div>
+
+      <div class="resource-node water-node">
+        <div class="water-pool"></div>
+        <span>Water</span>
+      </div>
+
+      <div class="resource-node mineral-node">
+        <div class="mineral-crystal"></div>
+        <span>Minerals</span>
+      </div>
+
+      <button class="colony-core" id="colonyCore" type="button" aria-label="Harvest colony core">
+        <span class="core-glow"></span>
+        <span class="core-title">Harvest Core</span>
+        <strong id="corePower">+1</strong>
+      </button>
+
+      <button class="cosmic-bonus" id="cosmicBonus" type="button" hidden>☄️</button>
+
+      <div class="astronaut" id="astronaut">
+        <div class="astro-shadow"></div>
+        <div class="astro-pack"></div>
+        <div class="astro-helmet"></div>
+        <div class="astro-body"></div>
+        <div class="astro-arm left"></div>
+        <div class="astro-arm right"></div>
+        <div class="astro-leg left"></div>
+        <div class="astro-leg right"></div>
+        <div class="tool"></div>
+      </div>
+
+      <div class="dig-effect" id="digEffect">+1</div>
+      <div class="combo-banner" id="comboBanner">Combo x1</div>
+      <div class="surface"></div>
+    </section>
+
+    <aside class="hud-panel right-hud">
+      <h2>Store</h2>
+
+      <div class="upgrade-card">
+        <span class="upgrade-icon">💨</span>
+        <div>
+          <h3>Oxygen Extractor</h3>
+          <p><span id="oxygenLevel">Owned 0</span> · <span id="oxygenRateText">+0 / sec</span></p>
+          <button type="button" data-upgrade="oxygen">Buy: 50 Minerals</button>
+        </div>
+      </div>
+
+      <div class="upgrade-card">
+        <span class="upgrade-icon">💧</span>
+        <div>
+          <h3>Water Extractor</h3>
+          <p><span id="waterLevel">Owned 0</span> · <span id="waterRateText">+0 / sec</span></p>
+          <button type="button" data-upgrade="water">Buy: 40 Oxygen</button>
+        </div>
+      </div>
+
+      <div class="upgrade-card">
+        <span class="upgrade-icon">💎</span>
+        <div>
+          <h3>Mining Drill</h3>
+          <p><span id="mineralsLevel">Owned 0</span> · <span id="mineralsRateText">+0 / sec</span></p>
+          <button type="button" data-upgrade="minerals">Buy: 60 Water</button>
+        </div>
+      </div>
+
+      <h2 class="events-title">Recent Events</h2>
+      <div class="event-log" id="eventLog">
+        <p>📡 Colony beacon online.</p>
+        <p>🌌 New mineral field detected.</p>
+        <p>⚠️ Click fast to build a combo.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script src="assets/js/game.js"></script>
+</body>
+</html>
