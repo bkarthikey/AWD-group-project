@@ -1,9 +1,10 @@
-Space Colony Builder Roadmap
-============================
-Project Goal
+##Space Colony Builder Roadmap
+
+#Project Goal
 ------------
 Build a client-server web application where each user manages a space colony on an alien planet. Players collect resources, buy upgrades, save their colony progress, and compare their colony with other users through leaderboards and public profiles.
-Core Requirements
+
+#Core Requirements
 -----------------
 1. User accounts
    - Users can sign up, log in, and log out.
@@ -22,7 +23,8 @@ Core Requirements
    - The astronaut moves and gathers oxygen, water, and minerals.
    - Resources can be spent on extractors.
    - Extractors generate resources automatically and become stronger when upgraded.
-Frontend Roadmap
+
+#Frontend Roadmap
 ----------------
 Phase 1: Static Prototype
    - Landing page
@@ -43,7 +45,8 @@ Phase 3: AJAX Interaction
    - Update resource counters dynamically.
    - Buy upgrades through API routes.
    - Refresh leaderboard data dynamically where useful.
-Backend Roadmap
+
+#Backend Roadmap
 ---------------
 Phase 1: Flask Setup
    - Create Flask application structure.
@@ -71,7 +74,8 @@ Phase 4: Game Routes
    - POST /api/collect
    - POST /api/buy-upgrade
    - GET /api/colony-state
-Database Plan
+
+#Database Plan
 -------------
 User
    - id
@@ -102,7 +106,8 @@ Event
    - colony_id
    - message
    - created_at
-Testing Roadmap
+
+#Testing Roadmap
 ---------------
 Unit tests:
 1. User registration creates a user.
@@ -116,7 +121,8 @@ Selenium tests:
 3. Login page loads and form can be completed.
 4. Dashboard is accessible after login.
 5. Leaderboard displays player rows.
-Team Workflow
+
+#Team Workflow
 -------------
 1. Use GitHub Issues for tasks and bugs.
 2. Each person works on a feature branch.
@@ -129,7 +135,8 @@ Suggested branches:
    - feature-database
    - feature-leaderboard
    - feature-tests
-Minimum Viable Product
+
+#Minimum Viable Product
 ----------------------
 The final project must include:
 1. Login, logout, and registration.
@@ -140,7 +147,8 @@ The final project must include:
 6. Public/private profile pages.
 7. README with launch and test instructions.
 8. At least 5 unit tests and 5 Selenium tests.
-Stretch Goals
+
+#Stretch Goals
 -------------
 1. Resource trading between users.
 2. Random events such as meteor strikes or alien discoveries.
