@@ -1,0 +1,155 @@
+Project Roadmap
+Use this as your team plan.
+
+Phase 1: Frontend Prototype
+Mostly done.
+
+Pages:
+
+index.html landing page
+login.html
+signup.html
+dashboard.html
+upgrades.html
+leaderboard.html
+profile.html
+profile-private.html
+Need to add:
+
+Bootstrap import
+consistent navbar
+cleaner README
+screenshots if possible
+Phase 2: Flask Backend
+Create this structure:
+
+AWD-group-project/
+├── app/
+│   ├── __init__.py
+│   ├── models.py
+│   ├── routes.py
+│   ├── auth.py
+│   ├── game.py
+│   ├── forms.py
+│   ├── templates/
+│   └── static/
+│       ├── css/
+│       └── js/
+├── tests/
+├── config.py
+├── run.py
+├── requirements.txt
+└── README.md
+Core backend features:
+
+register
+login
+logout
+save colony resources
+save upgrades
+leaderboard
+public/private profiles
+Phase 3: Database Models
+Minimum models:
+
+User
+- id
+- username
+- email
+- password_hash
+- is_public
+- created_at
+
+Colony
+- id
+- user_id
+- oxygen
+- water
+- minerals
+- score
+- total_collected
+- best_combo
+
+Upgrade
+- id
+- colony_id
+- upgrade_type
+- level
+
+Event
+- id
+- colony_id
+- message
+- created_at
+Optional later:
+
+Trade
+Achievement
+ResourceHistory
+Phase 4: AJAX Game Logic
+Dashboard should not reload every click.
+
+Frontend sends requests like:
+
+POST /api/collect
+POST /api/buy-upgrade
+GET /api/colony-state
+GET /api/leaderboard
+Backend updates database and returns JSON.
+
+Phase 5: Testing
+Rubric wants:
+
+5+ unit tests
+5+ Selenium tests
+Unit test examples:
+
+user can register
+password is hashed
+user can login
+collecting resources increases resources
+buying upgrade reduces cost and increases level
+Selenium test examples:
+
+signup page loads
+login form works
+dashboard loads after login
+leaderboard page loads
+profile privacy works
+Team Split
+For 4 people:
+
+You: frontend dashboard + game interaction + GitHub coordination
+Teammate 1: Flask auth + forms + CSRF
+Teammate 2: database models + game API routes
+Teammate 3: leaderboard/profile pages + tests + README
+For 3 people:
+
+You: frontend dashboard + upgrades + Git workflow
+Teammate 1: auth + database models
+Teammate 2: leaderboard/profile + testing + README
+GitHub Workflow
+Use issues and PRs for marks.
+
+Branches:
+
+feature-surajkumar-dashboard
+feature-auth
+feature-database-models
+feature-leaderboard
+feature-tests
+Every task should have:
+
+GitHub Issue
+branch
+commits
+Pull Request
+teammate review
+merge into main
+Next Best Step
+Your next practical task should be:
+
+Add Bootstrap to the current frontend.
+Clean README for checkpoint/final.
+Create GitHub issues for each feature.
+Start Flask structure only when your team is ready for backend.
