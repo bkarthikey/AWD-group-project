@@ -1,155 +1,149 @@
-Project Roadmap
-Use this as your team plan.
-
-Phase 1: Frontend Prototype
-Mostly done.
-
-Pages:
-
-index.html landing page
-login.html
-signup.html
-dashboard.html
-upgrades.html
-leaderboard.html
-profile.html
-profile-private.html
-Need to add:
-
-Bootstrap import
-consistent navbar
-cleaner README
-screenshots if possible
-Phase 2: Flask Backend
-Create this structure:
-
-AWD-group-project/
-├── app/
-│   ├── __init__.py
-│   ├── models.py
-│   ├── routes.py
-│   ├── auth.py
-│   ├── game.py
-│   ├── forms.py
-│   ├── templates/
-│   └── static/
-│       ├── css/
-│       └── js/
-├── tests/
-├── config.py
-├── run.py
-├── requirements.txt
-└── README.md
-Core backend features:
-
-register
-login
-logout
-save colony resources
-save upgrades
-leaderboard
-public/private profiles
+Space Colony Builder Roadmap
+============================
+Project Goal
+------------
+Build a client-server web application where each user manages a space colony on an alien planet. Players collect resources, buy upgrades, save their colony progress, and compare their colony with other users through leaderboards and public profiles.
+Core Requirements
+-----------------
+1. User accounts
+   - Users can sign up, log in, and log out.
+   - Passwords must be stored securely using salted hashes.
+   - Forms should use CSRF protection once Flask forms are added.
+2. Persistent colony data
+   - Each user has saved colony resources.
+   - Upgrade levels and score are saved between sessions.
+   - Progress should continue from the last saved state after logging in.
+3. User-to-user visibility
+   - Leaderboard shows the top 10 colonies.
+   - Public colony profiles can be viewed by other users.
+   - Private profiles only show limited user information.
+4. Interactive gameplay
+   - Player clicks or holds on the alien planet to collect resources.
+   - The astronaut moves and gathers oxygen, water, and minerals.
+   - Resources can be spent on extractors.
+   - Extractors generate resources automatically and become stronger when upgraded.
+Frontend Roadmap
+----------------
+Phase 1: Static Prototype
+   - Landing page
+   - Login page
+   - Sign up page
+   - Interactive dashboard mockup
+   - Upgrades page
+   - Leaderboard page
+   - Public and private profile pages
+Phase 2: UI Polish
+   - Add Bootstrap as the required CSS framework.
+   - Keep the custom sci-fi game styling.
+   - Make all pages responsive.
+   - Improve navigation consistency across pages.
+   - Add clearer visual feedback for buttons, upgrades, and resource gains.
+Phase 3: AJAX Interaction
+   - Send collection actions to the Flask backend without full page reloads.
+   - Update resource counters dynamically.
+   - Buy upgrades through API routes.
+   - Refresh leaderboard data dynamically where useful.
+Backend Roadmap
+---------------
+Phase 1: Flask Setup
+   - Create Flask application structure.
+   - Add configuration file.
+   - Add templates and static folders.
+   - Move existing HTML into Jinja templates.
+Phase 2: Authentication
+   - Register users.
+   - Log users in and out.
+   - Protect dashboard routes so only logged-in users can access them.
+   - Hash passwords securely.
 Phase 3: Database Models
-Minimum models:
-
+   Suggested models:
+   - User
+   - Colony
+   - Upgrade
+   - Event
+   - Achievement or Trade as stretch goals
+Phase 4: Game Routes
+   Suggested routes:
+   - GET /dashboard
+   - GET /upgrades
+   - GET /leaderboard
+   - GET /profile/<username>
+   - POST /api/collect
+   - POST /api/buy-upgrade
+   - GET /api/colony-state
+Database Plan
+-------------
 User
-- id
-- username
-- email
-- password_hash
-- is_public
-- created_at
+   - id
+   - username
+   - email
+   - password_hash
+   - is_public
+   - created_at
 
 Colony
-- id
-- user_id
-- oxygen
-- water
-- minerals
-- score
-- total_collected
-- best_combo
+   - id
+   - user_id
+   - oxygen
+   - water
+   - minerals
+   - score
+   - total_collected
+   - best_combo
 
 Upgrade
-- id
-- colony_id
-- upgrade_type
-- level
+   - id
+   - colony_id
+   - upgrade_type
+   - level
 
 Event
-- id
-- colony_id
-- message
-- created_at
-Optional later:
-
-Trade
-Achievement
-ResourceHistory
-Phase 4: AJAX Game Logic
-Dashboard should not reload every click.
-
-Frontend sends requests like:
-
-POST /api/collect
-POST /api/buy-upgrade
-GET /api/colony-state
-GET /api/leaderboard
-Backend updates database and returns JSON.
-
-Phase 5: Testing
-Rubric wants:
-
-5+ unit tests
-5+ Selenium tests
-Unit test examples:
-
-user can register
-password is hashed
-user can login
-collecting resources increases resources
-buying upgrade reduces cost and increases level
-Selenium test examples:
-
-signup page loads
-login form works
-dashboard loads after login
-leaderboard page loads
-profile privacy works
-Team Split
-For 4 people:
-
-You: frontend dashboard + game interaction + GitHub coordination
-Teammate 1: Flask auth + forms + CSRF
-Teammate 2: database models + game API routes
-Teammate 3: leaderboard/profile pages + tests + README
-For 3 people:
-
-You: frontend dashboard + upgrades + Git workflow
-Teammate 1: auth + database models
-Teammate 2: leaderboard/profile + testing + README
-GitHub Workflow
-Use issues and PRs for marks.
-
-Branches:
-
-feature-surajkumar-dashboard
-feature-auth
-feature-database-models
-feature-leaderboard
-feature-tests
-Every task should have:
-
-GitHub Issue
-branch
-commits
-Pull Request
-teammate review
-merge into main
-Next Best Step
-Your next practical task should be:
-
-Add Bootstrap to the current frontend.
-Clean README for checkpoint/final.
-Create GitHub issues for each feature.
-Start Flask structure only when your team is ready for backend.
+   - id
+   - colony_id
+   - message
+   - created_at
+Testing Roadmap
+---------------
+Unit tests:
+1. User registration creates a user.
+2. Passwords are hashed and not stored as plain text.
+3. Login works with correct credentials.
+4. Collecting resources increases colony resources.
+5. Buying an upgrade decreases the required resource and increases upgrade level.
+Selenium tests:
+1. Landing page loads.
+2. Sign up page loads and form can be completed.
+3. Login page loads and form can be completed.
+4. Dashboard is accessible after login.
+5. Leaderboard displays player rows.
+Team Workflow
+-------------
+1. Use GitHub Issues for tasks and bugs.
+2. Each person works on a feature branch.
+3. Use Pull Requests before merging into main.
+4. Review teammates' Pull Requests.
+5. Write regular commits with clear messages.
+Suggested branches:
+   - feature-dashboard
+   - feature-auth
+   - feature-database
+   - feature-leaderboard
+   - feature-tests
+Minimum Viable Product
+----------------------
+The final project must include:
+1. Login, logout, and registration.
+2. Saved colony progress in SQLite.
+3. Interactive resource collection.
+4. Upgrade purchasing.
+5. Leaderboard.
+6. Public/private profile pages.
+7. README with launch and test instructions.
+8. At least 5 unit tests and 5 Selenium tests.
+Stretch Goals
+-------------
+1. Resource trading between users.
+2. Random events such as meteor strikes or alien discoveries.
+3. Achievements and badges.
+4. Charts showing colony growth over time.
+5. More advanced animation and sound effects.
