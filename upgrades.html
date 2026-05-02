@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Upgrades | Space Colony</title>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="inner-page">
+  <div class="space-bg"></div>
+  <nav class="navbar">
+    <a class="brand" href="index.html">🚀 <span>Space Colony</span></a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="upgrades.html" class="active">Upgrades</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="profile.html">Account</a>
+    </div>
+  </nav>
+
+  <main class="content-shell">
+    <header class="page-header">
+      <p class="eyebrow">Colony engineering</p>
+      <h1>Upgrade Extractors</h1>
+      <p>Spend resources to build extractors that generate oxygen, water and minerals automatically.</p>
+    </header>
+
+    <section class="upgrade-bank" aria-label="Current resources">
+      <div class="resource-pill">💨 Oxygen <strong id="oxygenCount">120</strong></div>
+      <div class="resource-pill">💧 Water <strong id="waterCount">90</strong></div>
+      <div class="resource-pill">💎 Minerals <strong id="mineralCount">180</strong></div>
+      <div class="resource-pill">⭐ Score <strong id="scoreCount">0</strong></div>
+    </section>
+
+    <section class="upgrade-grid">
+      <article class="big-upgrade">
+        <div class="big-icon">💨</div>
+        <h2>Oxygen Extractor</h2>
+        <p>Extracts oxygen from alien minerals and underground gas pockets.</p>
+        <div class="upgrade-meta"><span id="oxygenUpgradeLevel">Level 0</span><span id="oxygenUpgradeRate">+0 oxygen / sec</span></div>
+        <button type="button" data-upgrade="oxygen">Upgrade</button>
+      </article>
+
+      <article class="big-upgrade">
+        <div class="big-icon">💧</div>
+        <h2>Water Extractor</h2>
+        <p>Condenses underground ice deposits into usable colony water.</p>
+        <div class="upgrade-meta"><span id="waterUpgradeLevel">Level 0</span><span id="waterUpgradeRate">+0 water / sec</span></div>
+        <button type="button" data-upgrade="water">Upgrade</button>
+      </article>
+
+      <article class="big-upgrade">
+        <div class="big-icon">💎</div>
+        <h2>Mineral Drill</h2>
+        <p>Automates deep rock drilling for colony construction materials.</p>
+        <div class="upgrade-meta"><span id="mineralsUpgradeLevel">Level 0</span><span id="mineralsUpgradeRate">+0 minerals / sec</span></div>
+        <button type="button" data-upgrade="minerals">Upgrade</button>
+      </article>
+    </section>
+  </main>
+  <script src="assets/js/game.js"></script>
+</body>
+</html>
