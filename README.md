@@ -22,6 +22,25 @@ Players click and hold on the planet surface to make a small astronaut explore, 
 
 Open `index.html` in a browser, or use the VS Code Live Server extension.
 
+To run the Flask backend skeleton:
+
+```bash
+python -m pip install -r requirements.txt
+python run.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:5000/
+```
+
+## How to run tests
+
+```bash
+python -m pytest -q
+```
+
 ## Planned backend features
 
 - Flask routes
