@@ -32,7 +32,6 @@ Open `index.html` in a browser, or use the VS Code Live Server extension.
 - leaderboard using real database values
 - CSRF protection and password hashing
 
-## CSS Framework note
+## CSS Framework
 
-This prototype currently uses custom CSS to show the design idea clearly.  
-When integrating with the final project, the team can combine this with Bootstrap components because Bootstrap is one of the allowed CSS frameworks.
+This prototype uses Bootstrap 5 through the CDN for the required CSS framework, with custom CSS layered on top for the sci-fi game interface.
