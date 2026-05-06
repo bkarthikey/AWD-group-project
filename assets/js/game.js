@@ -193,6 +193,14 @@ function updateDisplay() {
   if (corePower) corePower.textContent = `+${getClickPower()}`;
   if (rateCount) rateCount.textContent = `${(getTotalRate() * getActiveMultiplier()).toFixed(1)} / sec`;
 
+  if (astronaut) {
+    if (getTotalRate() > 0) {
+      astronaut.classList.add('walking');
+    } else {
+      astronaut.classList.remove('walking');
+    }
+  }
+
   updateStatusBars();
   updateMission();
   updateUpgradeButtons();
@@ -465,6 +473,24 @@ function addEvent(message) {
   }
 }
 
+function moveAstronautToNode(type) {
+  const pos = nodePositions[type];
+  astronaut.style.left = pos.left;
+  astronaut.style.bottom = pos.bottom;
+  astronaut.classList.add('mining');
+  digEffect.textContent = `+${getResourceRate(type).toFixed(1)}`;
+  digEffect.style.left = pos.left;
+  digEffect.style.bottom = `${parseInt(pos.bottom) + 50}px`;
+  digEffect.classList.add('show');
+  digEffect.setAttribute('data-type', type);
+  setTimeout(() => {
+    astronaut.classList.remove('mining');
+    digEffect.classList.remove('show');
+    astronaut.style.left = '50%';
+    astronaut.style.bottom = '145px';
+  }, 1000);
+}
+
 function generatePassiveResources() {
   Object.keys(upgradeConfig).forEach((type) => {
     const rate = getResourceRate(type);
@@ -475,6 +501,14 @@ function generatePassiveResources() {
       state.score += amount * 4;
     }
   });
+
+  // Move astronaut occasionally
+  if (getTotalRate() > 0 && Date.now() - lastMove > 5000) {
+    const types = Object.keys(nodePositions);
+    const randomType = types[Math.floor(Math.random() * types.length)];
+    moveAstronautToNode(randomType);
+    lastMove = Date.now();
+  }
 
   updateDisplay();
 }
