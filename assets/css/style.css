@@ -767,6 +767,10 @@ a {
   transition: left 0.22s linear;
 }
 
+.astronaut.walking {
+  animation: floatWalk 1s infinite;
+}
+
 .astronaut.mining .astro-arm.right,
 .astronaut.mining .tool {
   animation: dig 0.24s infinite alternate;
@@ -864,7 +868,7 @@ a {
   height: 6px;
   border-radius: 6px;
   background: #d6e0ec;
-  transform: rotate(35deg);
+  transform: rotate(0deg);
   transform-origin: left center;
 }
 

@@ -193,6 +193,14 @@ function updateDisplay() {
   if (corePower) corePower.textContent = `+${getClickPower()}`;
   if (rateCount) rateCount.textContent = `${(getTotalRate() * getActiveMultiplier()).toFixed(1)} / sec`;
 
+  if (astronaut) {
+    if (getTotalRate() > 0) {
+      astronaut.classList.add('walking');
+    } else {
+      astronaut.classList.remove('walking');
+    }
+  }
+
   updateStatusBars();
   updateMission();
   updateUpgradeButtons();
