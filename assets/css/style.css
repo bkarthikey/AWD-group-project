@@ -97,6 +97,10 @@ a {
   gap: 12px;
 }
 
+.nav-form {
+  margin: 0;
+}
+
 .nav-links a {
   padding: 9px 13px;
   border-radius: 999px;
@@ -107,9 +111,53 @@ a {
 }
 
 .nav-links a:hover,
-.nav-links a.active {
+.nav-links a.active,
+.nav-logout:hover {
   color: var(--text);
   background: rgba(255, 255, 255, 0.08);
+}
+
+.nav-logout {
+  padding: 9px 13px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.flash-stack {
+  position: fixed;
+  top: 92px;
+  right: 18px;
+  z-index: 30;
+  display: grid;
+  gap: 10px;
+  width: min(340px, calc(100vw - 36px));
+}
+
+.flash-message {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(4, 10, 23, 0.9);
+  color: var(--text);
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(14px);
+  font-weight: 700;
+}
+
+.flash-message.success {
+  border-color: rgba(109,255,177,0.35);
+  color: var(--green);
+}
+
+.flash-message.error {
+  border-color: rgba(255,108,141,0.35);
+  color: var(--danger);
 }
 
 .nav-btn,
@@ -323,6 +371,24 @@ a {
   color: var(--text);
   padding: 14px;
   outline: none;
+}
+
+.auth-card input:focus {
+  color: var(--text);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(93, 228, 255, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(93, 228, 255, 0.12);
+}
+
+.auth-check {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.auth-check input {
+  width: auto;
+  margin: 0;
 }
 
 .full {
