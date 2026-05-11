@@ -15,6 +15,19 @@ class User(UserMixin, db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     colony = db.relationship("Colony", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    discussion_posts = db.relationship("DiscussionPost", back_populates="user", cascade="all, delete-orphan")
+    comments = db.relationship("Comment", back_populates="user", cascade="all, delete-orphan")
+    sent_reward_exchanges = db.relationship(
+        "RewardExchange",
+        back_populates="sender",
+        cascade="all, delete-orphan",
+        foreign_keys="RewardExchange.sender_id",
+    )
+    received_reward_exchanges = db.relationship(
+        "RewardExchange",
+        back_populates="receiver",
+        foreign_keys="RewardExchange.receiver_id",
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -74,3 +87,39 @@ class Event(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     colony = db.relationship("Colony", back_populates="events")
+
+
+class DiscussionPost(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    title = db.Column(db.String(120), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    image_filename = db.Column(db.String(255))
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    user = db.relationship("User", back_populates="discussion_posts")
+    comments = db.relationship("Comment", back_populates="post", cascade="all, delete-orphan")
+
+
+class Comment(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("discussion_post.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    post = db.relationship("DiscussionPost", back_populates="comments")
+    user = db.relationship("User", back_populates="comments")
+
+
+class RewardExchange(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False)
+    receiver_id = db.Column(db.Integer, db.ForeignKey("user.id"))
+    resource_type = db.Column(db.String(30), nullable=False)
+    amount = db.Column(db.Integer, nullable=False)
+    status = db.Column(db.String(30), default="open", nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+
+    sender = db.relationship("User", back_populates="sent_reward_exchanges", foreign_keys=[sender_id])
+    receiver = db.relationship("User", back_populates="received_reward_exchanges", foreign_keys=[receiver_id])

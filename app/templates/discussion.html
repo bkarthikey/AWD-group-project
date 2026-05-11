@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Discussion Board | Space Colony{% endblock %}
+
+{% block content %}
+<main class="content-shell discussion-shell">
+  <header class="page-header discussion-header">
+    <div>
+      <p class="eyebrow">Colony community</p>
+      <h1>Discussion Board</h1>
+      <p>Share colony strategies, compare builds, comment on other colonies, and arrange oxygen, water, or mineral reward exchanges.</p>
+    </div>
+    <div class="community-stats">
+      <div><strong>{{ posts|length }}</strong><span>Active Posts</span></div>
+      <div><strong>{{ exchange_offers|length }}</strong><span>Reward Offers</span></div>
+    </div>
+  </header>
+
+  <section class="discussion-layout">
+    <div class="discussion-main">
+      <article class="discussion-panel create-post-panel">
+        <div class="panel-title-row">
+          <div>
+            <p class="eyebrow mini">Create post</p>
+            <h2>Share a colony strategy</h2>
+          </div>
+          <span class="status-chip">Mock UI</span>
+        </div>
+
+        <form class="create-post-form">
+          <label for="postTitle">Post title</label>
+          <input id="postTitle" class="form-control" type="text" placeholder="Example: Best first extractor order">
+
+          <label for="postContent">Strategy notes</label>
+          <textarea id="postContent" class="form-control" rows="5" placeholder="Explain your colony build, survival strategy, or resource trade idea."></textarea>
+
+          <div class="upload-grid">
+            <div>
+              <label for="postImage">Optional colony image</label>
+              <input id="postImage" class="form-control" type="file" accept="image/*">
+            </div>
+            <div class="image-placeholder">
+              <span>🛰️</span>
+              <p>Screenshot preview placeholder</p>
+            </div>
+          </div>
+
+          <div class="reward-offer-inputs">
+            <div>
+              <label for="offerOxygen">Oxygen offer</label>
+              <input id="offerOxygen" class="form-control" type="number" min="0" value="0">
+            </div>
+            <div>
+              <label for="offerWater">Water offer</label>
+              <input id="offerWater" class="form-control" type="number" min="0" value="0">
+            </div>
+            <div>
+              <label for="offerMinerals">Mineral offer</label>
+              <input id="offerMinerals" class="form-control" type="number" min="0" value="0">
+            </div>
+          </div>
+
+          <button class="primary-btn btn" type="button">Post Strategy</button>
+        </form>
+      </article>
+
+      <section class="post-feed" aria-label="Community posts">
+        {% for post in posts %}
+          <article class="discussion-panel post-card">
+            <div class="post-meta">
+              <div>
+                <h2>{{ post.title }}</h2>
+                <p>{{ post.username }} · {{ post.colony_name }} · {{ post.timestamp }}</p>
+              </div>
+              <span class="status-chip">Strategy</span>
+            </div>
+
+            <p class="post-content">{{ post.content }}</p>
+
+            {% if post.image %}
+              <div class="colony-image-placeholder">
+                <span>🌌</span>
+                <strong>Colony screenshot placeholder</strong>
+              </div>
+            {% endif %}
+
+            <div class="reward-strip">
+              <span>Reward offer</span>
+              <strong>💨 {{ post.reward.oxygen }}</strong>
+              <strong>💧 {{ post.reward.water }}</strong>
+              <strong>💎 {{ post.reward.minerals }}</strong>
+            </div>
+
+            <div class="post-actions">
+              <button class="secondary-btn btn" type="button">Comment</button>
+              <button class="primary-btn btn" type="button">Exchange Reward</button>
+            </div>
+
+            <div class="comments-section">
+              <h3>Comments</h3>
+              {% for comment in post.comments %}
+                <div class="comment-item">
+                  <strong>{{ comment.username }}</strong>
+                  <span>{{ comment.timestamp }}</span>
+                  <p>{{ comment.text }}</p>
+                </div>
+              {% endfor %}
+            </div>
+          </article>
+        {% endfor %}
+      </section>
+    </div>
+
+    <aside class="discussion-sidebar">
+      <section class="discussion-panel reward-exchange-panel">
+        <p class="eyebrow mini">Reward exchange</p>
+        <h2>Open Resource Offers</h2>
+        <p>Offer spare resources to other commanders or request support when your colony is short on supplies.</p>
+
+        <div class="exchange-list">
+          {% for offer in exchange_offers %}
+            <div class="exchange-item">
+              <div>
+                <strong>{{ offer.sender }}</strong>
+                <span>to {{ offer.receiver }}</span>
+              </div>
+              <p>{{ offer.amount }} {{ offer.resource }}</p>
+              <em>{{ offer.status }}</em>
+            </div>
+          {% endfor %}
+        </div>
+      </section>
+
+      <section class="discussion-panel reward-exchange-panel">
+        <p class="eyebrow mini">Create exchange</p>
+        <h2>Offer Rewards</h2>
+        <form class="exchange-form">
+          <label for="exchangeResource">Resource</label>
+          <select id="exchangeResource" class="form-control">
+            <option>oxygen</option>
+            <option>water</option>
+            <option>minerals</option>
+          </select>
+
+          <label for="exchangeAmount">Amount</label>
+          <input id="exchangeAmount" class="form-control" type="number" min="1" value="25">
+
+          <label for="exchangeReceiver">Receiver</label>
+          <input id="exchangeReceiver" class="form-control" type="text" placeholder="Username or Any commander">
+
+          <button class="primary-btn btn" type="button">Create Offer</button>
+        </form>
+      </section>
+    </aside>
+  </section>
+</main>
+{% endblock %}
