@@ -25,7 +25,7 @@
         <a href="{{ url_for('main.my_profile') }}">Profile</a>
         <a href="{{ url_for('main.my_profile') }}">Settings/Account</a>
         <form action="{{ url_for('main.logout') }}" method="post" class="nav-form">
-          {{ csrf_token() }}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="nav-logout">Logout</button>
         </form>
       {% else %}
