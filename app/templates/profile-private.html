@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Private Profile | Space Colony{% endblock %}
+
+{% block content %}
+<main class="private-shell">
+  <section class="profile-card">
+    <div class="profile-avatar">🔒</div>
+    <h1>{{ profile_user.username }}</h1>
+    <p class="private">Private Colony</p>
+    <p>This commander has chosen to keep their colony data private.</p>
+    <a href="{{ url_for('main.leaderboard_page') }}" class="secondary-btn btn">Back to Leaderboard</a>
+  </section>
+</main>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Sign Up | Space Colony{% endblock %}
+{% block body_class %}auth-page{% endblock %}
+{% block nav %}{% endblock %}
+
+{% block content %}
+<main class="auth-shell">
+  <form class="auth-card" method="post" action="{{ url_for('main.signup') }}">
+    {{ form.hidden_tag() }}
+    <a href="{{ url_for('main.index') }}" class="brand auth-brand">🚀 <span>Space Colony</span></a>
+    <h1>Create colony</h1>
+    <p>Start your survival mission on Kepler-77X.</p>
+
+    {{ form.username.label }}
+    {{ form.username(class="form-control", placeholder="Commander Nova") }}
+
+    {{ form.email.label }}
+    {{ form.email(class="form-control", placeholder="you@example.com") }}
+
+    {{ form.password.label }}
+    {{ form.password(class="form-control", placeholder="Create a password") }}
+
+    {{ form.confirm_password.label }}
+    {{ form.confirm_password(class="form-control", placeholder="Repeat password") }}
+
+    {{ form.submit(class="primary-btn full btn") }}
+    <p class="auth-switch">Already have an account? <a href="{{ url_for('main.login') }}">Login</a></p>
+  </form>
+</main>
+{% endblock %}
