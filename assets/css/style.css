@@ -830,7 +830,11 @@ a {
   height: 128px;
   z-index: 6;
   transform: translateX(-50%);
-  transition: left 0.22s linear;
+  transition: left 0.22s linear, bottom 0.22s linear;
+}
+
+.astronaut.walking {
+  animation: floatWalk 1s infinite;
 }
 
 .astronaut.mining .astro-arm.right,
@@ -920,18 +924,6 @@ a {
   width: 16px;
   height: 42px;
   transform: rotate(-9deg);
-}
-
-.tool {
-  position: absolute;
-  right: -6px;
-  top: 86px;
-  width: 34px;
-  height: 6px;
-  border-radius: 6px;
-  background: #d6e0ec;
-  transform: rotate(35deg);
-  transform-origin: left center;
 }
 
 .dig-effect {
