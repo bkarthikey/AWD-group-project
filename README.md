@@ -21,7 +21,7 @@ Players click and hold on the planet surface to make a small astronaut explore, 
 
 ```bash
 python -m pip install -r requirements.txt
-flask --app run.py init-db
+flask --app run.py db upgrade
 python run.py
 ```
 
@@ -37,6 +37,28 @@ http://127.0.0.1:5000/
 python -m pytest -q
 ```
 
+## Database migrations
+
+This project uses Flask-Migrate/Alembic for database migrations.
+
+Create a migration after model changes:
+
+```bash
+flask --app run.py db migrate -m "Describe schema change"
+```
+
+Apply migrations:
+
+```bash
+flask --app run.py db upgrade
+```
+
+The older development helper is still available if needed:
+
+```bash
+flask --app run.py init-db
+```
+
 ## Implemented backend foundation
 
 - Flask app factory and routes
@@ -47,6 +69,7 @@ python -m pytest -q
 - saved resource totals and upgrade levels through backend API routes
 - leaderboard using database values
 - CSRF protection and password hashing
+- Flask-Migrate/Alembic database migration setup
 
 ## CSS Framework
 
