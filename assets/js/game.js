@@ -1,4 +1,6 @@
 const STORAGE_KEY = "space-colony-save-v2";
+const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
+const backendEnabled = Boolean(csrfToken) && window.location.protocol !== "file:";
 
 const upgradeConfig = {
   oxygen: {
@@ -104,6 +106,7 @@ let collectTimer = null;
 let combo = 1;
 let lastClickTime = 0;
 let autosaveTimer = null;
+let pendingCollectRequests = 0;
 
 function cloneDefaultState() {
   return JSON.parse(JSON.stringify(defaultState));
@@ -127,8 +130,72 @@ function loadState() {
 }
 
 function saveState() {
+  if (backendEnabled) return;
   state.lastSaved = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+async function apiRequest(path, options = {}) {
+  const response = await fetch(path, {
+    ...options,
+    headers: {
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken,
+      ...(options.headers || {})
+    }
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "Request failed.");
+  }
+
+  return data;
+}
+
+function applyServerPayload(payload) {
+  if (!payload?.resources) return;
+
+  state.resources.oxygen = payload.resources.oxygen;
+  state.resources.water = payload.resources.water;
+  state.resources.minerals = payload.resources.minerals;
+  state.score = payload.resources.score;
+  state.totalCollected = payload.resources.total_collected;
+  state.bestCombo = Math.max(state.bestCombo, payload.resources.best_combo || 1);
+  state.upgrades = {
+    ...state.upgrades,
+    ...(payload.upgrades || {})
+  };
+}
+
+async function hydrateFromServer() {
+  if (!backendEnabled) return;
+
+  try {
+    const payload = await apiRequest("/api/colony-state");
+    applyServerPayload(payload);
+    updateDisplay();
+  } catch (error) {
+    addEvent(`⚠️ Could not load saved colony state: ${error.message}`);
+  }
+}
+
+async function syncCollection(resource, amount) {
+  if (!backendEnabled) return;
+
+  pendingCollectRequests += 1;
+  try {
+    const payload = await apiRequest("/api/collect", {
+      method: "POST",
+      body: JSON.stringify({ resource, amount })
+    });
+    applyServerPayload(payload);
+    updateDisplay();
+  } catch (error) {
+    addEvent(`⚠️ Collection sync failed: ${error.message}`);
+  } finally {
+    pendingCollectRequests -= 1;
+  }
 }
 
 function formatNumber(value) {
@@ -323,6 +390,7 @@ function collectResource(event) {
   showGain(`+${amount} ${gained}${critical ? "!" : ""}`, gained, event);
   showCombo();
   updateDisplay();
+  syncCollection(gained, amount);
 }
 
 function showGain(text, type, event) {
@@ -452,6 +520,21 @@ function buyUpgrade(type) {
   addEvent(`${config.icon} ${config.label} upgraded to level ${state.upgrades[type]}.`);
   saveState();
   updateDisplay();
+
+  if (backendEnabled) {
+    apiRequest("/api/buy-upgrade", {
+      method: "POST",
+      body: JSON.stringify({ upgrade_type: type })
+    })
+      .then((payload) => {
+        applyServerPayload(payload);
+        updateDisplay();
+      })
+      .catch((error) => {
+        addEvent(`⚠️ Upgrade sync failed: ${error.message}`);
+        hydrateFromServer();
+      });
+  }
 }
 
 function addEvent(message) {
@@ -466,6 +549,8 @@ function addEvent(message) {
 }
 
 function generatePassiveResources() {
+  if (backendEnabled && pendingCollectRequests > 0) return;
+
   Object.keys(upgradeConfig).forEach((type) => {
     const rate = getResourceRate(type);
     if (rate > 0) {
@@ -541,6 +626,7 @@ function attachEvents() {
 
 attachEvents();
 updateDisplay();
+hydrateFromServer();
 rotateNews();
 scheduleCosmicBonus();
 setInterval(generatePassiveResources, 1000);
