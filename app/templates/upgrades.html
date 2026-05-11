@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Upgrades | Space Colony{% endblock %}
+
+{% block content %}
+<main class="content-shell">
+  <header class="page-header">
+    <p class="eyebrow">Colony engineering</p>
+    <h1>Upgrade Extractors</h1>
+    <p>Spend resources to build extractors that generate oxygen, water and minerals automatically.</p>
+  </header>
+
+  <section class="upgrade-bank" aria-label="Current resources">
+    <div class="resource-pill">💨 Oxygen <strong id="oxygenCount">{{ colony.oxygen }}</strong></div>
+    <div class="resource-pill">💧 Water <strong id="waterCount">{{ colony.water }}</strong></div>
+    <div class="resource-pill">💎 Minerals <strong id="mineralCount">{{ colony.minerals }}</strong></div>
+    <div class="resource-pill">⭐ Score <strong id="scoreCount">{{ colony.score }}</strong></div>
+  </section>
+
+  <section class="upgrade-grid">
+    <article class="big-upgrade">
+      <div class="big-icon">💨</div>
+      <h2>Oxygen Extractor</h2>
+      <p>Extracts oxygen from alien minerals and underground gas pockets.</p>
+      <div class="upgrade-meta"><span id="oxygenUpgradeLevel">Level 0</span><span id="oxygenUpgradeRate">+0 oxygen / sec</span></div>
+      <button type="button" class="btn" data-upgrade="oxygen">Upgrade</button>
+    </article>
+
+    <article class="big-upgrade">
+      <div class="big-icon">💧</div>
+      <h2>Water Extractor</h2>
+      <p>Condenses underground ice deposits into usable colony water.</p>
+      <div class="upgrade-meta"><span id="waterUpgradeLevel">Level 0</span><span id="waterUpgradeRate">+0 water / sec</span></div>
+      <button type="button" class="btn" data-upgrade="water">Upgrade</button>
+    </article>
+
+    <article class="big-upgrade">
+      <div class="big-icon">💎</div>
+      <h2>Mineral Drill</h2>
+      <p>Automates deep rock drilling for colony construction materials.</p>
+      <div class="upgrade-meta"><span id="mineralsUpgradeLevel">Level 0</span><span id="mineralsUpgradeRate">+0 minerals / sec</span></div>
+      <button type="button" class="btn" data-upgrade="minerals">Upgrade</button>
+    </article>
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/game.js') }}"></script>
+{% endblock %}

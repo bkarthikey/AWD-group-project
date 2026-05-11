@@ -15,7 +15,7 @@ def create_app(config_class=Config):
     db.init_app(app)
     login_manager.init_app(app)
     csrf.init_app(app)
-    login_manager.login_view = "auth.login"
+    login_manager.login_view = "main.login"
 
     app.register_blueprint(main_bp)
     app.register_blueprint(auth_bp)
@@ -24,5 +24,10 @@ def create_app(config_class=Config):
     @login_manager.user_loader
     def load_user(user_id):
         return db.session.get(User, int(user_id))
+
+    @app.cli.command("init-db")
+    def init_db():
+        db.create_all()
+        print("Database tables created.")
 
     return app

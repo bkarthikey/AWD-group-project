@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}Space Colony Builder{% endblock %}
+{% block body_class %}landing-page{% endblock %}
+
+{% block content %}
+<main class="hero">
+  <section class="hero-text">
+    <p class="eyebrow">Alien planet survival clicker</p>
+    <h1>Explore. Mine. Build your colony.</h1>
+    <p class="hero-copy">
+      Click to send your astronaut across an alien surface, collect oxygen, water and minerals, then build extractors that generate resources while your colony grows.
+    </p>
+    <div class="hero-actions">
+      <a href="{{ url_for('main.signup') }}" class="primary-btn btn">Start Colony</a>
+      {% if current_user.is_authenticated %}
+        <a href="{{ url_for('main.dashboard') }}" class="secondary-btn btn">Continue Colony</a>
+      {% else %}
+        <a href="{{ url_for('main.login') }}" class="secondary-btn btn">Login</a>
+      {% endif %}
+    </div>
+  </section>
+
+  <section class="hero-preview">
+    <div class="mini-planet">
+      <div class="mini-astronaut"></div>
+      <div class="mini-crystal"></div>
+      <div class="mini-base"></div>
+    </div>
+  </section>
+</main>
+{% endblock %}

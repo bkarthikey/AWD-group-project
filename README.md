@@ -1,31 +1,27 @@
-# Space Colony Builder — Frontend Prototype
+# Space Colony Builder
 
-A static frontend prototype for the CITS3403/CITS5505 group project.
+A Flask web application prototype for the CITS3403/CITS5505 group project.
 
 ## Concept
 
 Space Colony Builder is an alien planet survival clicker game.  
 Players click and hold on the planet surface to make a small astronaut explore, dig, and collect resources such as oxygen, water, and minerals. These resources can later be used to build colony extractors that automatically generate resources over time.
 
-## Current frontend pages
+## Current pages
 
 - `index.html` — landing page
-- `login.html` — login mockup
-- `signup.html` — signup mockup
-- `dashboard.html` — main game-style dashboard
-- `upgrades.html` — extractor upgrade page
-- `leaderboard.html` — top players page
-- `profile.html` — public colony profile
-- `profile-private.html` — private profile view
+- `/login` — login page
+- `/signup` — signup page
+- `/dashboard` — main game-style dashboard
+- `/upgrades` — extractor upgrade page
+- `/leaderboard` — top players page
+- `/profile/<username>` — public/private colony profile view
 
 ## How to run
 
-Open `index.html` in a browser, or use the VS Code Live Server extension.
-
-To run the Flask backend skeleton:
-
 ```bash
 python -m pip install -r requirements.txt
+flask --app run.py init-db
 python run.py
 ```
 
@@ -41,14 +37,14 @@ http://127.0.0.1:5000/
 python -m pytest -q
 ```
 
-## Planned backend features
+## Implemented backend foundation
 
-- Flask routes
+- Flask app factory and routes
+- Jinja templates for main pages
 - user registration/login/logout
-- SQLite + SQLAlchemy database
-- saved resource totals and upgrade levels
-- public/private colony setting
-- leaderboard using real database values
+- SQLite + SQLAlchemy models for users, colonies, upgrades, and events
+- saved resource totals and upgrade levels through backend API routes
+- leaderboard using database values
 - CSRF protection and password hashing
 
 ## CSS Framework
