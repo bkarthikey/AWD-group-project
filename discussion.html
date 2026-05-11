@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discussion Board | Space Colony</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="inner-page">
+  <div class="space-bg"></div>
+  <nav class="navbar">
+    <a class="brand" href="index.html">🚀 <span>Space Colony</span></a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="discussion.html" class="active">Discussion Board</a>
+      <a href="leaderboard.html">Leaderboard</a>
+      <a href="profile.html">Profile</a>
+      <a href="profile.html">Settings/Account</a>
+    </div>
+  </nav>
+
+  <main class="content-shell discussion-shell">
+    <header class="page-header discussion-header">
+      <div>
+        <p class="eyebrow">Colony community</p>
+        <h1>Discussion Board</h1>
+        <p>Share colony strategies, compare builds, comment on other colonies, and arrange oxygen, water, or mineral reward exchanges.</p>
+      </div>
+      <div class="community-stats">
+        <div><strong>2</strong><span>Active Posts</span></div>
+        <div><strong>3</strong><span>Reward Offers</span></div>
+      </div>
+    </header>
+
+    <section class="discussion-layout">
+      <div class="discussion-main">
+        <article class="discussion-panel create-post-panel">
+          <div class="panel-title-row">
+            <div>
+              <p class="eyebrow mini">Create post</p>
+              <h2>Share a colony strategy</h2>
+            </div>
+            <span class="status-chip">Mock UI</span>
+          </div>
+
+          <form class="create-post-form">
+            <label>Post title</label>
+            <input class="form-control" type="text" placeholder="Example: Best first extractor order">
+            <label>Strategy notes</label>
+            <textarea class="form-control" rows="5" placeholder="Explain your colony build or resource trade idea."></textarea>
+            <div class="upload-grid">
+              <div>
+                <label>Optional colony image</label>
+                <input class="form-control" type="file" accept="image/*">
+              </div>
+              <div class="image-placeholder"><span>🛰️</span><p>Screenshot preview placeholder</p></div>
+            </div>
+            <div class="reward-offer-inputs">
+              <div><label>Oxygen</label><input class="form-control" type="number" min="0" value="0"></div>
+              <div><label>Water</label><input class="form-control" type="number" min="0" value="0"></div>
+              <div><label>Minerals</label><input class="form-control" type="number" min="0" value="0"></div>
+            </div>
+            <button class="primary-btn btn" type="button">Post Strategy</button>
+          </form>
+        </article>
+
+        <article class="discussion-panel post-card">
+          <div class="post-meta">
+            <div><h2>Early oxygen strategy</h2><p>NovaPrime · Aurora Outpost · Today 09:40</p></div>
+            <span class="status-chip">Strategy</span>
+          </div>
+          <p class="post-content">I rush oxygen extractors first, then use minerals for drills once the colony can survive without constant clicking.</p>
+          <div class="colony-image-placeholder"><span>🌌</span><strong>Colony screenshot placeholder</strong></div>
+          <div class="reward-strip"><span>Reward offer</span><strong>💨 80</strong><strong>💧 20</strong><strong>💎 0</strong></div>
+          <div class="post-actions">
+            <button class="secondary-btn btn" type="button">Comment</button>
+            <button class="primary-btn btn" type="button">Exchange Reward</button>
+          </div>
+          <div class="comments-section">
+            <h3>Comments</h3>
+            <div class="comment-item"><strong>LunaForge</strong><span>Today 09:55</span><p>This works well if you keep water above 50 before upgrading.</p></div>
+          </div>
+        </article>
+      </div>
+
+      <aside class="discussion-sidebar">
+        <section class="discussion-panel reward-exchange-panel">
+          <p class="eyebrow mini">Reward exchange</p>
+          <h2>Open Resource Offers</h2>
+          <div class="exchange-list">
+            <div class="exchange-item"><div><strong>NovaPrime</strong><span>to Any commander</span></div><p>80 oxygen</p><em>Open</em></div>
+            <div class="exchange-item"><div><strong>AstroKai</strong><span>to MarsMiner</span></div><p>120 water</p><em>Pending</em></div>
+            <div class="exchange-item"><div><strong>LunaForge</strong><span>to Any commander</span></div><p>45 minerals</p><em>Open</em></div>
+          </div>
+        </section>
+      </aside>
+    </section>
+  </main>
+</body>
+</html>

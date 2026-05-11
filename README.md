@@ -13,7 +13,7 @@ Players click and hold on the planet surface to make a small astronaut explore, 
 - `/login` — login page
 - `/signup` — signup page
 - `/dashboard` — main game-style dashboard
-- `/upgrades` — extractor upgrade page
+- `/discussion` — colony community and reward exchange page
 - `/leaderboard` — top players page
 - `/profile/<username>` — public/private colony profile view
 
@@ -43,6 +43,7 @@ python -m pytest -q
 - Jinja templates for main pages
 - user registration/login/logout
 - SQLite + SQLAlchemy models for users, colonies, upgrades, and events
+- discussion models for posts, comments, and reward exchanges
 - saved resource totals and upgrade levels through backend API routes
 - leaderboard using database values
 - CSRF protection and password hashing
