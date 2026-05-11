@@ -16,3 +16,8 @@ class LoginForm(FlaskForm):
     password = PasswordField("Password", validators=[DataRequired()])
     remember = BooleanField("Remember me")
     submit = SubmitField("Login")
+
+
+class PrivacyForm(FlaskForm):
+    is_public = BooleanField("Make colony public")
+    submit = SubmitField("Save Privacy")
