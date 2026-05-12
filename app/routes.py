@@ -2,8 +2,8 @@ from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from .extensions import db
-from .forms import CommentForm, DiscussionPostForm, LoginForm, RegisterForm
-from .models import Colony, Comment, DiscussionPost, User
+from .forms import CommentForm, DiscussionPostForm, LoginForm, RegisterForm, RewardExchangeForm
+from .models import Colony, Comment, DiscussionPost, RewardExchange, User
 
 main_bp = Blueprint("main", __name__)
 
@@ -91,6 +91,7 @@ def upgrades():
 def discussion():
     post_form = DiscussionPostForm(prefix="post")
     comment_form = CommentForm(prefix="comment")
+    exchange_form = RewardExchangeForm(prefix="exchange")
 
     if request.method == "POST":
         if not current_user.is_authenticated:
@@ -126,6 +127,28 @@ def discussion():
             flash("Comment added.", "success")
             return redirect(url_for("main.discussion"))
 
+        if request.form.get("form_name") == "create_exchange" and exchange_form.validate_on_submit():
+            receiver_username = (exchange_form.receiver_username.data or "").strip()
+            receiver = None
+
+            if receiver_username:
+                receiver = User.query.filter_by(username=receiver_username).first()
+                if not receiver:
+                    flash("Receiver username not found.", "error")
+                    return redirect(url_for("main.discussion"))
+
+            exchange = RewardExchange(
+                sender=current_user,
+                receiver=receiver,
+                resource_type=exchange_form.resource_type.data,
+                amount=exchange_form.amount.data,
+                status="open",
+            )
+            db.session.add(exchange)
+            db.session.commit()
+            flash("Reward exchange offer created.", "success")
+            return redirect(url_for("main.discussion"))
+
         flash("Please check the discussion form and try again.", "error")
 
     posts = (
@@ -135,11 +158,12 @@ def discussion():
         .all()
     )
 
-    exchange_offers = [
-        {"sender": "NovaPrime", "receiver": "Any commander", "resource": "oxygen", "amount": 80, "status": "Open"},
-        {"sender": "AstroKai", "receiver": "MarsMiner", "resource": "water", "amount": 120, "status": "Pending"},
-        {"sender": "LunaForge", "receiver": "Any commander", "resource": "minerals", "amount": 45, "status": "Open"},
-    ]
+    exchange_offers = (
+        RewardExchange.query
+        .order_by(RewardExchange.created_at.desc())
+        .limit(10)
+        .all()
+    )
 
     return render_template(
         "discussion.html",
@@ -147,6 +171,7 @@ def discussion():
         exchange_offers=exchange_offers,
         post_form=post_form,
         comment_form=comment_form,
+        exchange_form=exchange_form,
     )
 
 
