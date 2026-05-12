@@ -31,7 +31,7 @@ Phase 1: Static Prototype
    - Login page
    - Sign up page
    - Interactive dashboard mockup
-   - Upgrades page
+   - Discussion Board page
    - Leaderboard page
    - Public and private profile pages
 Phase 2: UI Polish
@@ -68,7 +68,7 @@ Phase 3: Database Models
 Phase 4: Game Routes
    Suggested routes:
    - GET /dashboard
-   - GET /upgrades
+   - GET /discussion
    - GET /leaderboard
    - GET /profile/<username>
    - POST /api/collect
@@ -142,11 +142,12 @@ The final project must include:
 1. Login, logout, and registration.
 2. Saved colony progress in SQLite.
 3. Interactive resource collection.
-4. Upgrade purchasing.
-5. Leaderboard.
-6. Public/private profile pages.
-7. README with launch and test instructions.
-8. At least 5 unit tests and 5 Selenium tests.
+4. Upgrade purchasing from the dashboard store.
+5. Discussion board and reward exchange planning.
+6. Leaderboard.
+7. Public/private profile pages.
+8. README with launch and test instructions.
+9. At least 5 unit tests and 5 Selenium tests.
 
 #Stretch Goals
 -------------
