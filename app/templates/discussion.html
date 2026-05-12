@@ -18,6 +18,20 @@
 
   <section class="discussion-layout">
     <div class="discussion-main">
+      <article class="discussion-panel user-search-panel">
+        <div class="panel-title-row">
+          <div>
+            <p class="eyebrow mini">Commander search</p>
+            <h2>Find colony builders</h2>
+          </div>
+          <span class="status-chip">AJAX</span>
+        </div>
+        <p>Search for other commanders to view profiles, discuss colony layouts, or arrange a future reward exchange.</p>
+        <label for="userSearchInput">Search username</label>
+        <input id="userSearchInput" class="form-control" type="search" placeholder="Type at least 2 letters">
+        <div id="userSearchResults" class="user-search-results" aria-live="polite"></div>
+      </article>
+
       <article class="discussion-panel create-post-panel">
         <div class="panel-title-row">
           <div>
@@ -181,4 +195,8 @@
     </aside>
   </section>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/community.js') }}"></script>
 {% endblock %}

@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
 from .extensions import db
-from .models import Colony, Event, Upgrade
+from .models import Colony, Event, Upgrade, User
 
 
 game_bp = Blueprint("game", __name__, url_prefix="/api")
@@ -116,4 +116,29 @@ def leaderboard():
             "minerals": colony.minerals,
         }
         for index, colony in enumerate(colonies)
+    ])
+
+
+@game_bp.get("/users/search")
+def search_users():
+    query = request.args.get("q", "").strip()
+    if len(query) < 2:
+        return jsonify([])
+
+    users = (
+        User.query
+        .filter(User.username.ilike(f"%{query}%"))
+        .order_by(User.username.asc())
+        .limit(8)
+        .all()
+    )
+
+    return jsonify([
+        {
+            "username": user.username,
+            "colony_name": user.colony.name if user.colony else "New Colony",
+            "is_public": user.is_public,
+            "profile_url": f"/profile/{user.username}",
+        }
+        for user in users
     ])
