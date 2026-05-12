@@ -37,6 +37,26 @@ http://127.0.0.1:5000/
 python -m pytest -q
 ```
 
+Run only the backend/unit tests:
+
+```bash
+python -m pytest -q tests/test_models.py tests/test_game_api.py tests/test_auth_pages.py tests/test_discussion.py
+```
+
+Run Selenium browser tests:
+
+```bash
+python -m pytest -q tests/test_selenium.py
+```
+
+On macOS, enable Safari WebDriver before running Selenium tests:
+
+```bash
+safaridriver --enable
+```
+
+The Selenium tests run a live Flask test server and then drive a real browser through the main user flows.
+
 ## Database migrations
 
 This project uses Flask-Migrate/Alembic for database migrations.
