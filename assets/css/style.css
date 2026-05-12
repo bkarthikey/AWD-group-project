@@ -1332,6 +1332,30 @@ a {
   margin: 6px 0 0;
 }
 
+.comment-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.comment-form .form-control {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+
+.no-comments {
+  margin: 0;
+  color: var(--muted);
+}
+
+.discussion-empty {
+  display: grid;
+  gap: 12px;
+  align-items: start;
+}
+
 .exchange-list {
   display: grid;
   gap: 10px;
