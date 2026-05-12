@@ -1211,11 +1211,69 @@ a {
 }
 
 .create-post-form .form-control:focus,
-.exchange-form .form-control:focus {
+.exchange-form .form-control:focus,
+.user-search-panel .form-control:focus {
   border-color: rgba(93,228,255,0.4);
   background: rgba(255,255,255,0.09);
   color: var(--text);
   box-shadow: 0 0 0 0.2rem rgba(93,228,255,0.12);
+}
+
+.user-search-panel {
+  display: grid;
+  gap: 12px;
+}
+
+.user-search-panel label {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.user-search-panel .form-control {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+  padding: 12px 14px;
+}
+
+.user-search-results {
+  display: grid;
+  gap: 10px;
+  min-height: 44px;
+}
+
+.user-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid rgba(93,228,255,0.16);
+  border-radius: 14px;
+  background: rgba(93,228,255,0.07);
+  transition: 0.2s ease;
+}
+
+.user-result:hover {
+  border-color: rgba(93,228,255,0.38);
+  transform: translateY(-1px);
+}
+
+.user-result strong,
+.user-result em {
+  display: block;
+}
+
+.user-result em,
+.user-result small,
+.search-empty {
+  color: var(--muted);
+  font-style: normal;
+}
+
+.search-empty {
+  margin: 0;
 }
 
 .upload-grid {
