@@ -87,6 +87,45 @@ def upgrades():
     return render_template("upgrades.html", colony=ensure_colony(current_user))
 
 
+@main_bp.get("/discussion")
+def discussion():
+    posts = [
+        {
+            "username": "NovaPrime",
+            "colony_name": "Aurora Outpost",
+            "timestamp": "Today 09:40",
+            "title": "Early oxygen strategy",
+            "content": "I rush oxygen extractors first, then use minerals for drills once the colony can survive without constant clicking.",
+            "image": True,
+            "reward": {"oxygen": 80, "water": 20, "minerals": 0},
+            "comments": [
+                {"username": "LunaForge", "text": "This works well if you keep water above 50 before upgrading.", "timestamp": "Today 09:55"},
+                {"username": "MarsMiner", "text": "I pair this with mineral drills for faster score growth.", "timestamp": "Today 10:02"},
+            ],
+        },
+        {
+            "username": "AstroKai",
+            "colony_name": "Crater Nine",
+            "timestamp": "Yesterday 21:18",
+            "title": "Trading spare water",
+            "content": "My colony has extra water production. I can exchange water for minerals with anyone building drills.",
+            "image": False,
+            "reward": {"oxygen": 0, "water": 120, "minerals": 0},
+            "comments": [
+                {"username": "NovaPrime", "text": "Happy to trade minerals once my next drill comes online.", "timestamp": "Yesterday 21:31"},
+            ],
+        },
+    ]
+
+    exchange_offers = [
+        {"sender": "NovaPrime", "receiver": "Any commander", "resource": "oxygen", "amount": 80, "status": "Open"},
+        {"sender": "AstroKai", "receiver": "MarsMiner", "resource": "water", "amount": 120, "status": "Pending"},
+        {"sender": "LunaForge", "receiver": "Any commander", "resource": "minerals", "amount": 45, "status": "Open"},
+    ]
+
+    return render_template("discussion.html", posts=posts, exchange_offers=exchange_offers)
+
+
 @main_bp.get("/leaderboard")
 def leaderboard_page():
     colonies = (
