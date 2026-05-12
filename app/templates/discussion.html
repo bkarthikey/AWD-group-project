@@ -162,11 +162,15 @@
           {% for offer in exchange_offers %}
             <div class="exchange-item">
               <div>
-                <strong>{{ offer.sender }}</strong>
-                <span>to {{ offer.receiver }}</span>
+                <strong>{{ offer.sender.username }}</strong>
+                <span>to {{ offer.receiver.username if offer.receiver else "Any commander" }}</span>
               </div>
-              <p>{{ offer.amount }} {{ offer.resource }}</p>
-              <em>{{ offer.status }}</em>
+              <p>{{ offer.amount }} {{ offer.resource_type }}</p>
+              <em>{{ offer.status|title }}</em>
+            </div>
+          {% else %}
+            <div class="discussion-empty compact">
+              <p>No reward offers yet. Create one to start resource trading.</p>
             </div>
           {% endfor %}
         </div>
@@ -175,22 +179,28 @@
       <section class="discussion-panel reward-exchange-panel">
         <p class="eyebrow mini">Create exchange</p>
         <h2>Offer Rewards</h2>
-        <form class="exchange-form">
-          <label for="exchangeResource">Resource</label>
-          <select id="exchangeResource" class="form-control">
-            <option>oxygen</option>
-            <option>water</option>
-            <option>minerals</option>
-          </select>
+        {% if current_user.is_authenticated %}
+          <form class="exchange-form" method="post" action="{{ url_for('main.discussion') }}">
+            {{ exchange_form.hidden_tag() }}
+            <input type="hidden" name="form_name" value="create_exchange">
 
-          <label for="exchangeAmount">Amount</label>
-          <input id="exchangeAmount" class="form-control" type="number" min="1" value="25">
+            {{ exchange_form.resource_type.label }}
+            {{ exchange_form.resource_type(class="form-control") }}
 
-          <label for="exchangeReceiver">Receiver</label>
-          <input id="exchangeReceiver" class="form-control" type="text" placeholder="Username or Any commander">
+            {{ exchange_form.amount.label }}
+            {{ exchange_form.amount(class="form-control", min="1") }}
 
-          <button class="primary-btn btn" type="button">Create Offer</button>
-        </form>
+            {{ exchange_form.receiver_username.label }}
+            {{ exchange_form.receiver_username(class="form-control", placeholder="Username or leave blank") }}
+
+            {{ exchange_form.submit(class="primary-btn btn") }}
+          </form>
+        {% else %}
+          <div class="discussion-empty compact">
+            <p>Log in to create oxygen, water, or mineral exchange offers.</p>
+            <a href="{{ url_for('main.login') }}" class="primary-btn btn">Login to Trade</a>
+          </div>
+        {% endif %}
       </section>
     </aside>
   </section>
