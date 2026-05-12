@@ -1,9 +1,9 @@
-from flask import Blueprint, flash, redirect, render_template, url_for
+from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
 from .extensions import db
-from .forms import LoginForm, RegisterForm
-from .models import Colony, User
+from .forms import CommentForm, DiscussionPostForm, LoginForm, RegisterForm
+from .models import Colony, Comment, DiscussionPost, User
 
 main_bp = Blueprint("main", __name__)
 
@@ -87,35 +87,53 @@ def upgrades():
     return render_template("upgrades.html", colony=ensure_colony(current_user))
 
 
-@main_bp.get("/discussion")
+@main_bp.route("/discussion", methods=["GET", "POST"])
 def discussion():
-    posts = [
-        {
-            "username": "NovaPrime",
-            "colony_name": "Aurora Outpost",
-            "timestamp": "Today 09:40",
-            "title": "Early oxygen strategy",
-            "content": "I rush oxygen extractors first, then use minerals for drills once the colony can survive without constant clicking.",
-            "image": True,
-            "reward": {"oxygen": 80, "water": 20, "minerals": 0},
-            "comments": [
-                {"username": "LunaForge", "text": "This works well if you keep water above 50 before upgrading.", "timestamp": "Today 09:55"},
-                {"username": "MarsMiner", "text": "I pair this with mineral drills for faster score growth.", "timestamp": "Today 10:02"},
-            ],
-        },
-        {
-            "username": "AstroKai",
-            "colony_name": "Crater Nine",
-            "timestamp": "Yesterday 21:18",
-            "title": "Trading spare water",
-            "content": "My colony has extra water production. I can exchange water for minerals with anyone building drills.",
-            "image": False,
-            "reward": {"oxygen": 0, "water": 120, "minerals": 0},
-            "comments": [
-                {"username": "NovaPrime", "text": "Happy to trade minerals once my next drill comes online.", "timestamp": "Yesterday 21:31"},
-            ],
-        },
-    ]
+    post_form = DiscussionPostForm(prefix="post")
+    comment_form = CommentForm(prefix="comment")
+
+    if request.method == "POST":
+        if not current_user.is_authenticated:
+            flash("Please log in to join the discussion board.", "error")
+            return redirect(url_for("main.login"))
+
+        if request.form.get("form_name") == "create_post" and post_form.validate_on_submit():
+            image_filename = (post_form.image_filename.data or "").strip() or None
+            post = DiscussionPost(
+                user=current_user,
+                title=post_form.title.data.strip(),
+                content=post_form.content.data.strip(),
+                image_filename=image_filename,
+            )
+            db.session.add(post)
+            db.session.commit()
+            flash("Discussion post created.", "success")
+            return redirect(url_for("main.discussion"))
+
+        if request.form.get("form_name") == "add_comment" and comment_form.validate_on_submit():
+            post = db.session.get(DiscussionPost, int(comment_form.post_id.data))
+            if not post:
+                flash("Discussion post not found.", "error")
+                return redirect(url_for("main.discussion"))
+
+            comment = Comment(
+                post=post,
+                user=current_user,
+                content=comment_form.content.data.strip(),
+            )
+            db.session.add(comment)
+            db.session.commit()
+            flash("Comment added.", "success")
+            return redirect(url_for("main.discussion"))
+
+        flash("Please check the discussion form and try again.", "error")
+
+    posts = (
+        DiscussionPost.query
+        .join(DiscussionPost.user)
+        .order_by(DiscussionPost.created_at.desc())
+        .all()
+    )
 
     exchange_offers = [
         {"sender": "NovaPrime", "receiver": "Any commander", "resource": "oxygen", "amount": 80, "status": "Open"},
@@ -123,7 +141,13 @@ def discussion():
         {"sender": "LunaForge", "receiver": "Any commander", "resource": "minerals", "amount": 45, "status": "Open"},
     ]
 
-    return render_template("discussion.html", posts=posts, exchange_offers=exchange_offers)
+    return render_template(
+        "discussion.html",
+        posts=posts,
+        exchange_offers=exchange_offers,
+        post_form=post_form,
+        comment_form=comment_form,
+    )
 
 
 @main_bp.get("/leaderboard")

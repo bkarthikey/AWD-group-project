@@ -24,44 +24,54 @@
             <p class="eyebrow mini">Create post</p>
             <h2>Share a colony strategy</h2>
           </div>
-          <span class="status-chip">Mock UI</span>
+          <span class="status-chip">Database-backed</span>
         </div>
 
-        <form class="create-post-form">
-          <label for="postTitle">Post title</label>
-          <input id="postTitle" class="form-control" type="text" placeholder="Example: Best first extractor order">
+        {% if current_user.is_authenticated %}
+          <form class="create-post-form" method="post" action="{{ url_for('main.discussion') }}">
+            {{ post_form.hidden_tag() }}
+            <input type="hidden" name="form_name" value="create_post">
 
-          <label for="postContent">Strategy notes</label>
-          <textarea id="postContent" class="form-control" rows="5" placeholder="Explain your colony build, survival strategy, or resource trade idea."></textarea>
+            {{ post_form.title.label }}
+            {{ post_form.title(class="form-control", placeholder="Example: Best first extractor order") }}
 
-          <div class="upload-grid">
-            <div>
-              <label for="postImage">Optional colony image</label>
-              <input id="postImage" class="form-control" type="file" accept="image/*">
+            {{ post_form.content.label }}
+            {{ post_form.content(class="form-control", rows="5", placeholder="Explain your colony build, survival strategy, or resource trade idea.") }}
+
+            <div class="upload-grid">
+              <div>
+                {{ post_form.image_filename.label }}
+                {{ post_form.image_filename(class="form-control", placeholder="example-colony.png") }}
+              </div>
+              <div class="image-placeholder">
+                <span>🛰️</span>
+                <p>Screenshot filename placeholder</p>
+              </div>
             </div>
-            <div class="image-placeholder">
-              <span>🛰️</span>
-              <p>Screenshot preview placeholder</p>
+
+            <div class="reward-offer-inputs">
+              <div>
+                <label for="offerOxygen">Oxygen offer</label>
+                <input id="offerOxygen" class="form-control" type="number" min="0" value="0" disabled>
+              </div>
+              <div>
+                <label for="offerWater">Water offer</label>
+                <input id="offerWater" class="form-control" type="number" min="0" value="0" disabled>
+              </div>
+              <div>
+                <label for="offerMinerals">Mineral offer</label>
+                <input id="offerMinerals" class="form-control" type="number" min="0" value="0" disabled>
+              </div>
             </div>
+
+            {{ post_form.submit(class="primary-btn btn") }}
+          </form>
+        {% else %}
+          <div class="discussion-empty">
+            <p>Log in to create discussion posts and comment on colony strategies.</p>
+            <a href="{{ url_for('main.login') }}" class="primary-btn btn">Login to Post</a>
           </div>
-
-          <div class="reward-offer-inputs">
-            <div>
-              <label for="offerOxygen">Oxygen offer</label>
-              <input id="offerOxygen" class="form-control" type="number" min="0" value="0">
-            </div>
-            <div>
-              <label for="offerWater">Water offer</label>
-              <input id="offerWater" class="form-control" type="number" min="0" value="0">
-            </div>
-            <div>
-              <label for="offerMinerals">Mineral offer</label>
-              <input id="offerMinerals" class="form-control" type="number" min="0" value="0">
-            </div>
-          </div>
-
-          <button class="primary-btn btn" type="button">Post Strategy</button>
-        </form>
+        {% endif %}
       </article>
 
       <section class="post-feed" aria-label="Community posts">
@@ -70,25 +80,25 @@
             <div class="post-meta">
               <div>
                 <h2>{{ post.title }}</h2>
-                <p>{{ post.username }} · {{ post.colony_name }} · {{ post.timestamp }}</p>
+                <p>{{ post.user.username }} · {{ post.user.colony.name if post.user.colony else "New Colony" }} · {{ post.created_at.strftime("%b %d, %Y %H:%M") }}</p>
               </div>
               <span class="status-chip">Strategy</span>
             </div>
 
             <p class="post-content">{{ post.content }}</p>
 
-            {% if post.image %}
+            {% if post.image_filename %}
               <div class="colony-image-placeholder">
                 <span>🌌</span>
-                <strong>Colony screenshot placeholder</strong>
+                <strong>{{ post.image_filename }}</strong>
               </div>
             {% endif %}
 
             <div class="reward-strip">
               <span>Reward offer</span>
-              <strong>💨 {{ post.reward.oxygen }}</strong>
-              <strong>💧 {{ post.reward.water }}</strong>
-              <strong>💎 {{ post.reward.minerals }}</strong>
+              <strong>💨 Planned</strong>
+              <strong>💧 Planned</strong>
+              <strong>💎 Planned</strong>
             </div>
 
             <div class="post-actions">
@@ -100,12 +110,29 @@
               <h3>Comments</h3>
               {% for comment in post.comments %}
                 <div class="comment-item">
-                  <strong>{{ comment.username }}</strong>
-                  <span>{{ comment.timestamp }}</span>
-                  <p>{{ comment.text }}</p>
+                  <strong>{{ comment.user.username }}</strong>
+                  <span>{{ comment.created_at.strftime("%b %d, %Y %H:%M") }}</span>
+                  <p>{{ comment.content }}</p>
                 </div>
+              {% else %}
+                <p class="no-comments">No comments yet. Start the strategy discussion.</p>
               {% endfor %}
+
+              {% if current_user.is_authenticated %}
+                <form class="comment-form" method="post" action="{{ url_for('main.discussion') }}">
+                  {{ comment_form.hidden_tag() }}
+                  <input type="hidden" name="form_name" value="add_comment">
+                  <input type="hidden" name="comment-post_id" value="{{ post.id }}">
+                  {{ comment_form.content(class="form-control", rows="2", placeholder="Add a comment...") }}
+                  {{ comment_form.submit(class="secondary-btn btn") }}
+                </form>
+              {% endif %}
             </div>
+          </article>
+        {% else %}
+          <article class="discussion-panel discussion-empty">
+            <h2>No community posts yet</h2>
+            <p>Create the first strategy post to start the Space Colony discussion board.</p>
           </article>
         {% endfor %}
       </section>
