@@ -1,6 +1,16 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, EmailField, HiddenField, PasswordField, StringField, SubmitField, TextAreaField
-from wtforms.validators import DataRequired, Email, EqualTo, Length
+from wtforms import (
+    BooleanField,
+    EmailField,
+    HiddenField,
+    IntegerField,
+    PasswordField,
+    SelectField,
+    StringField,
+    SubmitField,
+    TextAreaField,
+)
+from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
 
 
 class RegisterForm(FlaskForm):
@@ -34,3 +44,18 @@ class CommentForm(FlaskForm):
     post_id = HiddenField("Post ID", validators=[DataRequired()])
     content = TextAreaField("Comment", validators=[DataRequired(), Length(min=2, max=500)])
     submit = SubmitField("Add Comment")
+
+
+class RewardExchangeForm(FlaskForm):
+    resource_type = SelectField(
+        "Resource",
+        choices=[
+            ("oxygen", "oxygen"),
+            ("water", "water"),
+            ("minerals", "minerals"),
+        ],
+        validators=[DataRequired()],
+    )
+    amount = IntegerField("Amount", default=25, validators=[DataRequired(), NumberRange(min=1, max=100000)])
+    receiver_username = StringField("Receiver", validators=[Optional(), Length(max=80)])
+    submit = SubmitField("Create Offer")
