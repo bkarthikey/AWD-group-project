@@ -115,3 +115,68 @@ def test_logged_in_user_can_comment_on_discussion_post():
         saved_comment = Comment.query.filter_by(content="This helped my colony survive longer.").first()
         assert saved_comment is not None
         assert saved_comment.post_id == post_id
+
+
+def test_logged_in_user_can_create_reward_exchange_offer():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        sender = User(username="Vega", email="vega@example.com")
+        receiver = User(username="Atlas", email="atlas@example.com")
+        sender.set_password("password123")
+        receiver.set_password("password123")
+        db.session.add_all([sender, receiver])
+        db.session.commit()
+
+    client.post("/login", data={"email": "vega@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "create_exchange",
+            "exchange-resource_type": "water",
+            "exchange-amount": "45",
+            "exchange-receiver_username": "Atlas",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"45 water" in response.data
+    assert b"to Atlas" in response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.filter_by(resource_type="water").first()
+        assert saved_exchange is not None
+        assert saved_exchange.amount == 45
+        assert saved_exchange.sender.username == "Vega"
+        assert saved_exchange.receiver.username == "Atlas"
+
+
+def test_reward_exchange_requires_existing_receiver_when_named():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        sender = User(username="Sol", email="sol@example.com")
+        sender.set_password("password123")
+        db.session.add(sender)
+        db.session.commit()
+
+    client.post("/login", data={"email": "sol@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "create_exchange",
+            "exchange-resource_type": "oxygen",
+            "exchange-amount": "30",
+            "exchange-receiver_username": "MissingUser",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Receiver username not found." in response.data
+
+    with app.app_context():
+        assert RewardExchange.query.count() == 0
