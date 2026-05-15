@@ -1,6 +1,6 @@
 from app import create_app
 from app.extensions import db
-from app.models import User
+from app.models import Colony, Upgrade, User
 from config import TestConfig
 
 
@@ -58,3 +58,42 @@ def test_dashboard_requires_login():
 
     assert response.status_code == 302
     assert "/login" in response.headers["Location"]
+
+
+def test_public_profile_shows_real_colony_stats():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        user = User(username="Atlas", email="atlas@example.com")
+        user.set_password("password123")
+        colony = Colony(
+            user=user,
+            name="Atlas Prime",
+            oxygen=410,
+            water=275,
+            minerals=920,
+            score=1500,
+            total_collected=820,
+            best_combo=14,
+        )
+        db.session.add_all([
+            user,
+            colony,
+            Upgrade(colony=colony, upgrade_type="oxygen", level=2),
+            Upgrade(colony=colony, upgrade_type="water", level=3),
+            Upgrade(colony=colony, upgrade_type="minerals", level=4),
+        ])
+        db.session.commit()
+
+    response = client.get("/profile/Atlas")
+
+    assert response.status_code == 200
+    assert b"Atlas Prime" in response.data
+    assert b"1,500" in response.data
+    assert b"820" in response.data
+    assert b"x14" in response.data
+    assert b"410" in response.data
+    assert b"275" in response.data
+    assert b"920" in response.data
+    assert b"9" in response.data
