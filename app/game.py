@@ -1,51 +1,26 @@
 from flask import Blueprint, jsonify, request
 from flask_login import current_user, login_required
 
+from .colony_service import (
+    UPGRADES,
+    apply_passive_income,
+    colony_payload,
+    get_or_create_upgrade,
+    get_ranked_public_colonies,
+    get_upgrade_cost,
+)
 from .extensions import db
-from .models import Colony, Event, Upgrade, User
+from .models import Event, User
 
 
 game_bp = Blueprint("game", __name__, url_prefix="/api")
-
-UPGRADES = {
-    "oxygen": {"cost_resource": "minerals", "base_cost": 50, "rate": 1.2},
-    "water": {"cost_resource": "oxygen", "base_cost": 40, "rate": 1.0},
-    "minerals": {"cost_resource": "water", "base_cost": 60, "rate": 1.4},
-}
-
-
-def get_upgrade_cost(upgrade_type, level):
-    return int(UPGRADES[upgrade_type]["base_cost"] * (1.55 ** level))
-
-
-def get_or_create_upgrade(colony, upgrade_type):
-    upgrade = Upgrade.query.filter_by(colony=colony, upgrade_type=upgrade_type).first()
-    if upgrade:
-        return upgrade
-
-    upgrade = Upgrade(colony=colony, upgrade_type=upgrade_type, level=0)
-    db.session.add(upgrade)
-    return upgrade
-
-
-def colony_payload(colony):
-    upgrades = {upgrade.upgrade_type: upgrade.level for upgrade in colony.upgrades}
-    for upgrade_type in UPGRADES:
-        upgrades.setdefault(upgrade_type, 0)
-
-    return {
-        "resources": colony.resource_dict(),
-        "upgrades": upgrades,
-        "rates": {
-            upgrade_type: round(upgrades[upgrade_type] * config["rate"], 1)
-            for upgrade_type, config in UPGRADES.items()
-        },
-    }
 
 
 @game_bp.get("/colony-state")
 @login_required
 def colony_state():
+    apply_passive_income(current_user.colony)
+    db.session.commit()
     return jsonify(colony_payload(current_user.colony))
 
 
@@ -60,6 +35,7 @@ def collect():
         return jsonify({"error": "Invalid collection request."}), 400
 
     colony = current_user.colony
+    apply_passive_income(colony)
     setattr(colony, resource, getattr(colony, resource) + amount)
     colony.total_collected += amount
     colony.score += amount * 2
@@ -78,6 +54,7 @@ def buy_upgrade():
         return jsonify({"error": "Unknown upgrade type."}), 400
 
     colony = current_user.colony
+    apply_passive_income(colony)
     upgrade = get_or_create_upgrade(colony, upgrade_type)
     config = UPGRADES[upgrade_type]
     cost = get_upgrade_cost(upgrade_type, upgrade.level)
@@ -97,13 +74,7 @@ def buy_upgrade():
 
 @game_bp.get("/leaderboard")
 def leaderboard():
-    colonies = (
-        Colony.query.join(Colony.user)
-        .filter_by(is_public=True)
-        .order_by(Colony.score.desc())
-        .limit(10)
-        .all()
-    )
+    colonies = get_ranked_public_colonies()
 
     return jsonify([
         {
