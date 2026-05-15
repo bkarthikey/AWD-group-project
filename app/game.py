@@ -97,6 +97,8 @@ def leaderboard():
             "oxygen": colony.oxygen,
             "water": colony.water,
             "minerals": colony.minerals,
+            "best_combo": colony.best_combo,
+            "total_collected": colony.total_collected, 
         }
         for index, colony in enumerate(colonies)
     ])
