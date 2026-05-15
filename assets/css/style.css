@@ -1339,27 +1339,6 @@ a {
   font-size: 1rem;
 }
 
-.reward-strip {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-top: 16px;
-  padding: 12px;
-  border: 1px solid rgba(109,255,177,0.16);
-  border-radius: 14px;
-  background: rgba(109,255,177,0.07);
-}
-
-.reward-strip span {
-  color: var(--muted);
-  font-weight: 800;
-}
-
-.reward-strip strong {
-  color: var(--green);
-}
-
 .post-actions {
   display: flex;
   gap: 12px;
