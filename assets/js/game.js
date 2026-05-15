@@ -99,12 +99,18 @@ const rateCount = document.getElementById("rateCount");
 const missionText = document.getElementById("missionText");
 const missionFill = document.getElementById("missionFill");
 const missionReward = document.getElementById("missionReward");
+const nodePositions = {
+  oxygen: { left: "24%", bottom: "132px" },
+  water: { left: "68%", bottom: "118px" },
+  minerals: { left: "82%", bottom: "140px" }
+};
 
 let state = loadState();
 let isCollecting = false;
 let collectTimer = null;
 let combo = 1;
 let lastClickTime = 0;
+let lastMove = 0;
 let autosaveTimer = null;
 let pendingCollectRequests = 0;
 
