@@ -34,6 +34,38 @@ def test_collect_increases_resource():
         db.drop_all()
 
 
+def test_collect_scores_combo_and_critical_hits_consistently():
+    app, client = create_logged_in_client()
+
+    response = client.post(
+        "/api/collect",
+        json={"resource": "oxygen", "amount": 5, "best_combo": 4, "combo": 4, "critical": True},
+    )
+
+    assert response.status_code == 200
+    assert response.get_json()["resources"]["score"] == 80
+
+    with app.app_context():
+        colony = Colony.query.first()
+        assert colony.score == 80
+        db.drop_all()
+
+
+def test_collect_rejects_invalid_combo():
+    app, client = create_logged_in_client()
+
+    response = client.post(
+        "/api/collect",
+        json={"resource": "oxygen", "amount": 5, "best_combo": 1, "combo": 30, "critical": False},
+    )
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Invalid collection request."
+
+    with app.app_context():
+        db.drop_all()
+
+
 def test_collect_persists_higher_best_combo():
     app, client = create_logged_in_client()
 
