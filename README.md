@@ -5,23 +5,23 @@ A Flask web application prototype for the CITS3403/CITS5505 group project.
 ## Concept
 
 Space Colony Builder is an alien planet survival clicker game.  
-Players click and hold on the planet surface to make a small astronaut explore, dig, and collect resources such as oxygen, water, and minerals. These resources can later be used to build colony extractors that automatically generate resources over time.
+Players click and hold on the planet surface to make a small astronaut explore, dig and collect resources such as oxygen, water, and minerals. These resources can later be used to build colony extractors that automatically generate resources over time.
 
 ## Team members
 
-- 24444964 — Suraj Kumar Vijay Kumar — `surajkumar1818`
-- UWA ID — Name — `github-username`
-- UWA ID — Name — `github-username`
+- 24444964 - Suraj Kumar Vijay Kumar - `surajkumar1818`
+- UWA ID - Name - `github-username`
+- UWA ID - Name - `github-username`
 
 ## Current pages
 
-- `index.html` — landing page
-- `/login` — login page
-- `/signup` — signup page
-- `/dashboard` — main game-style dashboard
-- `/discussion` — colony community and reward exchange page
-- `/leaderboard` — top players page
-- `/profile/<username>` — public/private colony profile view
+- `index.html` - landing page
+- `/login` - login page
+- `/signup` - signup page
+- `/dashboard` - main game-style dashboard
+- `/discussion` - colony community and reward exchange page
+- `/leaderboard` - top players page
+- `/profile/<username>` - public/private colony profile view
 
 ## How to run
 
@@ -90,7 +90,7 @@ flask --app run.py init-db
 - Flask app factory and routes
 - Jinja templates for main pages
 - user registration/login/logout
-- SQLite + SQLAlchemy models for users, colonies, upgrades, and events
+- SQLite + SQLAlchemy models for users, colonies, upgrades and events
 - discussion models for posts, comments, and reward exchanges
 - discussion screenshot uploads for colony images
 - saved resource totals and upgrade levels through backend API routes
