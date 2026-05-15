@@ -1450,6 +1450,10 @@ a {
   font-weight: 900;
 }
 
+.exchange-item form {
+  margin-top: 10px;
+}
+
 .big-upgrade {
   padding: 24px;
 }
