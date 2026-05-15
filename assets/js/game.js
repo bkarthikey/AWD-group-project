@@ -186,14 +186,20 @@ async function hydrateFromServer() {
   }
 }
 
-async function syncCollection(resource, amount, bestCombo) {
+async function syncCollection(resource, amount, bestCombo, comboValue, criticalHit) {
   if (!backendEnabled) return;
 
   pendingCollectRequests += 1;
   try {
     const payload = await apiRequest("/api/collect", {
       method: "POST",
-      body: JSON.stringify({ resource, amount, best_combo: bestCombo })
+      body: JSON.stringify({
+        resource,
+        amount,
+        best_combo: bestCombo,
+        combo: comboValue,
+        critical: criticalHit
+      })
     });
     applyServerPayload(payload);
     updateDisplay();
@@ -404,7 +410,7 @@ function collectResource(event) {
   showGain(`+${amount} ${gained}${critical ? "!" : ""}`, gained, event);
   showCombo();
   updateDisplay();
-  syncCollection(gained, amount, state.bestCombo);
+  syncCollection(gained, amount, state.bestCombo, combo, critical);
 }
 
 function showGain(text, type, event) {
