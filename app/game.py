@@ -31,6 +31,8 @@ def collect():
     resource = data.get("resource", "minerals")
     amount = int(data.get("amount", 1))
     best_combo = int(data.get("best_combo", 1))
+    combo = int(data.get("combo", 1))
+    critical = bool(data.get("critical", False))
 
     if (
         resource not in ("oxygen", "water", "minerals")
@@ -38,6 +40,8 @@ def collect():
         or amount > 50
         or best_combo < 1
         or best_combo > 25
+        or combo < 1
+        or combo > 25
     ):
         return jsonify({"error": "Invalid collection request."}), 400
 
@@ -45,7 +49,7 @@ def collect():
     apply_passive_income(colony)
     setattr(colony, resource, getattr(colony, resource) + amount)
     colony.total_collected += amount
-    colony.score += amount * 2
+    colony.score += amount * combo * (4 if critical else 2)
     colony.best_combo = max(colony.best_combo, best_combo)
     db.session.commit()
 
