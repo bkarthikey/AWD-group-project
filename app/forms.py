@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     BooleanField,
     EmailField,
@@ -36,7 +37,10 @@ class PrivacyForm(FlaskForm):
 class DiscussionPostForm(FlaskForm):
     title = StringField("Post title", validators=[DataRequired(), Length(min=3, max=120)])
     content = TextAreaField("Strategy notes", validators=[DataRequired(), Length(min=5, max=1200)])
-    image_filename = StringField("Optional colony image filename", validators=[Length(max=255)])
+    image = FileField(
+        "Optional colony screenshot",
+        validators=[FileAllowed(["png", "jpg", "jpeg", "gif", "webp"], "Images only.")],
+    )
     submit = SubmitField("Post Strategy")
 
 

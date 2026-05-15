@@ -7,3 +7,5 @@ venv/
 instance/
 *.db
 .env
+assets/uploads/discussion/*
+!assets/uploads/discussion/.gitkeep
