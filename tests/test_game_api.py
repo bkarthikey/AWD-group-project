@@ -125,6 +125,27 @@ def test_user_search_returns_matching_users():
         db.drop_all()
 
 
+def test_user_search_hides_private_colony_name():
+    app, client = create_logged_in_client()
+    with app.app_context():
+        user = User(username="HiddenLuna", email="hidden@example.com", is_public=False)
+        user.set_password("password123")
+        colony = Colony(user=user, name="Secret Base")
+        db.session.add_all([user, colony])
+        db.session.commit()
+
+    response = client.get("/api/users/search?q=hidden")
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data[0]["username"] == "HiddenLuna"
+    assert data[0]["colony_name"] is None
+    assert data[0]["is_public"] is False
+
+    with app.app_context():
+        db.drop_all()
+
+
 def test_user_search_short_query_returns_empty_list():
     app, client = create_logged_in_client()
 
