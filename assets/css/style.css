@@ -1283,7 +1283,7 @@ a {
 }
 
 .image-placeholder,
-.colony-image-placeholder {
+.colony-image-frame {
   display: grid;
   place-items: center;
   text-align: center;
@@ -1297,9 +1297,22 @@ a {
   color: var(--muted);
 }
 
-.image-placeholder span,
-.colony-image-placeholder span {
+.image-placeholder span {
   font-size: 2rem;
+}
+
+.colony-image-frame {
+  overflow: hidden;
+  min-height: 0;
+  padding: 0;
+  border-style: solid;
+}
+
+.colony-image {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: cover;
 }
 
 .reward-offer-inputs {

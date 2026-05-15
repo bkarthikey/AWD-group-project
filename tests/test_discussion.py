@@ -1,3 +1,5 @@
+from io import BytesIO
+
 from app import create_app
 from app.extensions import db
 from app.models import Colony, Comment, DiscussionPost, RewardExchange, User
@@ -52,8 +54,9 @@ def test_discussion_models_store_post_comment_and_exchange():
         assert saved_exchange.receiver.username == "Kai"
 
 
-def test_logged_in_user_can_create_discussion_post():
+def test_logged_in_user_can_create_discussion_post(tmp_path):
     app = create_app(TestConfig)
+    app.config["UPLOAD_FOLDER"] = tmp_path
     client = app.test_client()
     with app.app_context():
         db.create_all()
@@ -69,8 +72,9 @@ def test_logged_in_user_can_create_discussion_post():
             "form_name": "create_post",
             "post-title": "Best oxygen start",
             "post-content": "Build oxygen extractor before mineral drill.",
-            "post-image_filename": "oxygen-base.png",
+            "post-image": (BytesIO(b"fake image bytes"), "oxygen-base.png"),
         },
+        content_type="multipart/form-data",
         follow_redirects=True,
     )
 
@@ -80,7 +84,39 @@ def test_logged_in_user_can_create_discussion_post():
     with app.app_context():
         saved_post = DiscussionPost.query.filter_by(title="Best oxygen start").first()
         assert saved_post is not None
-        assert saved_post.image_filename == "oxygen-base.png"
+        assert saved_post.image_filename.endswith(".png")
+        assert (tmp_path / saved_post.image_filename).exists()
+
+
+def test_discussion_post_rejects_non_image_upload(tmp_path):
+    app = create_app(TestConfig)
+    app.config["UPLOAD_FOLDER"] = tmp_path
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        user = User(username="Kepler", email="kepler@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+
+    client.post("/login", data={"email": "kepler@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "create_post",
+            "post-title": "My upload test",
+            "post-content": "Trying to upload a text file.",
+            "post-image": (BytesIO(b"plain text"), "notes.txt"),
+        },
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Please check the discussion form and try again." in response.data
+
+    with app.app_context():
+        assert DiscussionPost.query.count() == 0
 
 
 def test_logged_in_user_can_comment_on_discussion_post():

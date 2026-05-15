@@ -86,6 +86,7 @@ flask --app run.py init-db
 - user registration/login/logout
 - SQLite + SQLAlchemy models for users, colonies, upgrades, and events
 - discussion models for posts, comments, and reward exchanges
+- discussion screenshot uploads for colony images
 - saved resource totals and upgrade levels through backend API routes
 - server-side passive extractor income applied from saved upgrade levels
 - leaderboard using database values
