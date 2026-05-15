@@ -167,6 +167,17 @@
               </div>
               <p>{{ offer.amount }} {{ offer.resource_type }}</p>
               <em>{{ offer.status|title }}</em>
+              {% if current_user.is_authenticated
+                    and offer.status == "open"
+                    and offer.sender_id != current_user.id
+                    and (offer.receiver_id is none or offer.receiver_id == current_user.id) %}
+                <form method="post" action="{{ url_for('main.discussion') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="form_name" value="accept_exchange">
+                  <input type="hidden" name="exchange_id" value="{{ offer.id }}">
+                  <button class="secondary-btn btn" type="submit">Accept Offer</button>
+                </form>
+              {% endif %}
             </div>
           {% else %}
             <div class="discussion-empty compact">
