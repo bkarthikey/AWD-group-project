@@ -1,5 +1,9 @@
-from flask import Blueprint, flash, redirect, render_template, request, url_for
+import os
+from uuid import uuid4
+
+from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
+from werkzeug.utils import secure_filename
 
 from .colony_service import apply_passive_income, get_ranked_public_colonies
 from .extensions import db
@@ -17,6 +21,18 @@ def ensure_colony(user):
     db.session.add(colony)
     db.session.commit()
     return colony
+
+
+def save_discussion_image(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    safe_name = secure_filename(file_storage.filename)
+    _, extension = os.path.splitext(safe_name)
+    stored_name = f"{uuid4().hex}{extension.lower()}"
+    os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
+    file_storage.save(os.path.join(current_app.config["UPLOAD_FOLDER"], stored_name))
+    return stored_name
 
 
 @main_bp.get("/")
@@ -106,12 +122,11 @@ def discussion():
             return redirect(url_for("main.login"))
 
         if request.form.get("form_name") == "create_post" and post_form.validate_on_submit():
-            image_filename = (post_form.image_filename.data or "").strip() or None
             post = DiscussionPost(
                 user=current_user,
                 title=post_form.title.data.strip(),
                 content=post_form.content.data.strip(),
-                image_filename=image_filename,
+                image_filename=save_discussion_image(post_form.image.data),
             )
             db.session.add(post)
             db.session.commit()

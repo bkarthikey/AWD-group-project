@@ -42,7 +42,7 @@
         </div>
 
         {% if current_user.is_authenticated %}
-          <form class="create-post-form" method="post" action="{{ url_for('main.discussion') }}">
+          <form class="create-post-form" method="post" action="{{ url_for('main.discussion') }}" enctype="multipart/form-data">
             {{ post_form.hidden_tag() }}
             <input type="hidden" name="form_name" value="create_post">
 
@@ -54,12 +54,12 @@
 
             <div class="upload-grid">
               <div>
-                {{ post_form.image_filename.label }}
-                {{ post_form.image_filename(class="form-control", placeholder="example-colony.png") }}
+                {{ post_form.image.label }}
+                {{ post_form.image(class="form-control", accept=".png,.jpg,.jpeg,.gif,.webp") }}
               </div>
               <div class="image-placeholder">
                 <span>🛰️</span>
-                <p>Screenshot filename placeholder</p>
+                <p>PNG, JPG, GIF, or WEBP</p>
               </div>
             </div>
 
@@ -102,9 +102,12 @@
             <p class="post-content">{{ post.content }}</p>
 
             {% if post.image_filename %}
-              <div class="colony-image-placeholder">
-                <span>🌌</span>
-                <strong>{{ post.image_filename }}</strong>
+              <div class="colony-image-frame">
+                <img
+                  class="colony-image"
+                  src="{{ url_for('static', filename='uploads/discussion/' ~ post.image_filename) }}"
+                  alt="Colony screenshot uploaded by {{ post.user.username }}"
+                >
               </div>
             {% endif %}
 
