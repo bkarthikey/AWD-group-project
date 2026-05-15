@@ -15,7 +15,7 @@ function renderUserSearchResults(users) {
     <a class="user-result" href="${user.profile_url}">
       <span>
         <strong>${user.username}</strong>
-        <em>${user.colony_name}</em>
+        <em>${user.colony_name || "Private colony"}</em>
       </span>
       <small>${user.is_public ? "Public colony" : "Private profile"}</small>
     </a>
