@@ -107,7 +107,7 @@ def search_users():
     return jsonify([
         {
             "username": user.username,
-            "colony_name": user.colony.name if user.colony else "New Colony",
+            "colony_name": user.colony.name if user.is_public and user.colony else None,
             "is_public": user.is_public,
             "profile_url": f"/profile/{user.username}",
         }
