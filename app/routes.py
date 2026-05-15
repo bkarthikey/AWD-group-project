@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, flash, redirect, render_template, requ
 from flask_login import current_user, login_required, login_user, logout_user
 from werkzeug.utils import secure_filename
 
-from .colony_service import apply_passive_income, get_ranked_public_colonies
+from .colony_service import apply_passive_income, get_ranked_public_colonies, get_upgrade_levels
 from .extensions import db
 from .forms import CommentForm, DiscussionPostForm, LoginForm, RegisterForm, RewardExchangeForm
 from .models import Colony, Comment, DiscussionPost, RewardExchange, User
@@ -248,7 +248,14 @@ def profile(username):
     colony = ensure_colony(user)
     apply_passive_income(colony)
     db.session.commit()
-    return render_template("profile.html", profile_user=user, colony=colony)
+    upgrade_levels = get_upgrade_levels(colony)
+    profile_stats = {
+        "total_extractors": sum(upgrade_levels.values()),
+        "oxygen_extractors": upgrade_levels["oxygen"],
+        "water_extractors": upgrade_levels["water"],
+        "mineral_extractors": upgrade_levels["minerals"],
+    }
+    return render_template("profile.html", profile_user=user, colony=colony, profile_stats=profile_stats)
 
 
 @main_bp.get("/profile")
