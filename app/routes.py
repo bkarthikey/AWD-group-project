@@ -156,6 +156,42 @@ def discussion():
             flash("Reward exchange offer created.", "success")
             return redirect(url_for("main.discussion"))
 
+        if request.form.get("form_name") == "accept_exchange":
+            exchange_id = request.form.get("exchange_id", type=int)
+            exchange = db.session.get(RewardExchange, exchange_id)
+
+            if not exchange or exchange.status != "open":
+                flash("That reward exchange is no longer available.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.sender_id == current_user.id:
+                flash("You cannot accept your own reward exchange.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.receiver_id and exchange.receiver_id != current_user.id:
+                flash("This reward exchange is reserved for another commander.", "error")
+                return redirect(url_for("main.discussion"))
+
+            sender_colony = ensure_colony(exchange.sender)
+            receiver_colony = ensure_colony(current_user)
+            apply_passive_income(sender_colony)
+            apply_passive_income(receiver_colony)
+            db.session.flush()
+
+            sender_balance = getattr(sender_colony, exchange.resource_type)
+            if sender_balance < exchange.amount:
+                db.session.rollback()
+                flash("Sender no longer has enough resources for this exchange.", "error")
+                return redirect(url_for("main.discussion"))
+
+            setattr(sender_colony, exchange.resource_type, sender_balance - exchange.amount)
+            setattr(receiver_colony, exchange.resource_type, getattr(receiver_colony, exchange.resource_type) + exchange.amount)
+            exchange.receiver = current_user
+            exchange.status = "completed"
+            db.session.commit()
+            flash("Reward exchange completed.", "success")
+            return redirect(url_for("main.discussion"))
+
         flash("Please check the discussion form and try again.", "error")
 
     posts = (
