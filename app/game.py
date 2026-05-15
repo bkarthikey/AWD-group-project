@@ -124,6 +124,7 @@ def search_users():
             "colony_name": user.colony.name if user.is_public and user.colony else None,
             "is_public": user.is_public,
             "profile_url": f"/profile/{user.username}",
+            "rank": user.colony.score if user.colony else 0,
         }
         for user in users
     ])
