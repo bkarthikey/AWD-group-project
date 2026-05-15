@@ -1,6 +1,7 @@
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, login_user, logout_user
 
+from .colony_service import apply_passive_income, get_ranked_public_colonies
 from .extensions import db
 from .forms import CommentForm, DiscussionPostForm, LoginForm, RegisterForm, RewardExchangeForm
 from .models import Colony, Comment, DiscussionPost, RewardExchange, User
@@ -78,13 +79,19 @@ def logout():
 @main_bp.get("/dashboard")
 @login_required
 def dashboard():
-    return render_template("dashboard.html", colony=ensure_colony(current_user))
+    colony = ensure_colony(current_user)
+    apply_passive_income(colony)
+    db.session.commit()
+    return render_template("dashboard.html", colony=colony)
 
 
 @main_bp.get("/upgrades")
 @login_required
 def upgrades():
-    return render_template("upgrades.html", colony=ensure_colony(current_user))
+    colony = ensure_colony(current_user)
+    apply_passive_income(colony)
+    db.session.commit()
+    return render_template("upgrades.html", colony=colony)
 
 
 @main_bp.route("/discussion", methods=["GET", "POST"])
@@ -177,13 +184,7 @@ def discussion():
 
 @main_bp.get("/leaderboard")
 def leaderboard_page():
-    colonies = (
-        Colony.query.join(Colony.user)
-        .filter_by(is_public=True)
-        .order_by(Colony.score.desc())
-        .limit(10)
-        .all()
-    )
+    colonies = get_ranked_public_colonies()
     return render_template("leaderboard.html", colonies=colonies)
 
 
@@ -193,7 +194,10 @@ def profile(username):
     if not user.is_public:
         return render_template("profile-private.html", profile_user=user)
 
-    return render_template("profile.html", profile_user=user, colony=ensure_colony(user))
+    colony = ensure_colony(user)
+    apply_passive_income(colony)
+    db.session.commit()
+    return render_template("profile.html", profile_user=user, colony=colony)
 
 
 @main_bp.get("/profile")
