@@ -9,12 +9,9 @@ Players click and hold on the planet surface to make a small astronaut explore, 
 
 ## Team members
 
-| UWA ID | Name | GitHub Username |
-| --- | --- | --- |
-| 24444964 | Suraj Kumar Vijay Kumar | surajkumar1818 |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+- 24444964 — Suraj Kumar Vijay Kumar — `surajkumar1818`
+- UWA ID — Name — `github-username`
+- UWA ID — Name — `github-username`
 
 ## Current pages
 
