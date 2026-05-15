@@ -30,8 +30,15 @@ def collect():
     data = request.get_json(silent=True) or {}
     resource = data.get("resource", "minerals")
     amount = int(data.get("amount", 1))
+    best_combo = int(data.get("best_combo", 1))
 
-    if resource not in ("oxygen", "water", "minerals") or amount < 1 or amount > 50:
+    if (
+        resource not in ("oxygen", "water", "minerals")
+        or amount < 1
+        or amount > 50
+        or best_combo < 1
+        or best_combo > 25
+    ):
         return jsonify({"error": "Invalid collection request."}), 400
 
     colony = current_user.colony
@@ -39,6 +46,7 @@ def collect():
     setattr(colony, resource, getattr(colony, resource) + amount)
     colony.total_collected += amount
     colony.score += amount * 2
+    colony.best_combo = max(colony.best_combo, best_combo)
     db.session.commit()
 
     return jsonify(colony_payload(colony))

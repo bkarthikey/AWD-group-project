@@ -34,6 +34,50 @@ def test_collect_increases_resource():
         db.drop_all()
 
 
+def test_collect_persists_higher_best_combo():
+    app, client = create_logged_in_client()
+
+    response = client.post("/api/collect", json={"resource": "oxygen", "amount": 5, "best_combo": 9})
+
+    assert response.status_code == 200
+    assert response.get_json()["resources"]["best_combo"] == 9
+
+    with app.app_context():
+        colony = Colony.query.first()
+        assert colony.best_combo == 9
+        db.drop_all()
+
+
+def test_collect_does_not_lower_existing_best_combo():
+    app, client = create_logged_in_client()
+    with app.app_context():
+        colony = Colony.query.first()
+        colony.best_combo = 12
+        db.session.commit()
+
+    response = client.post("/api/collect", json={"resource": "water", "amount": 3, "best_combo": 4})
+
+    assert response.status_code == 200
+    assert response.get_json()["resources"]["best_combo"] == 12
+
+    with app.app_context():
+        colony = Colony.query.first()
+        assert colony.best_combo == 12
+        db.drop_all()
+
+
+def test_collect_rejects_invalid_best_combo():
+    app, client = create_logged_in_client()
+
+    response = client.post("/api/collect", json={"resource": "minerals", "amount": 1, "best_combo": 30})
+
+    assert response.status_code == 400
+    assert response.get_json()["error"] == "Invalid collection request."
+
+    with app.app_context():
+        db.drop_all()
+
+
 def test_buy_upgrade_spends_resource_and_increases_level():
     app, client = create_logged_in_client()
 
