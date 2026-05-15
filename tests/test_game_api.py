@@ -1,6 +1,8 @@
+from datetime import datetime, timedelta, timezone
+
 from app import create_app
 from app.extensions import db
-from app.models import Colony, User
+from app.models import Colony, Upgrade, User
 from config import TestConfig
 
 
@@ -41,6 +43,63 @@ def test_buy_upgrade_spends_resource_and_increases_level():
     data = response.get_json()
     assert data["resources"]["minerals"] == 130
     assert data["upgrades"]["oxygen"] == 1
+
+    with app.app_context():
+        db.drop_all()
+
+
+def test_colony_state_applies_passive_income_from_extractors():
+    app, client = create_logged_in_client()
+
+    with app.app_context():
+        colony = Colony.query.first()
+        colony.updated_at = datetime.now(timezone.utc) - timedelta(seconds=10)
+        db.session.add(Upgrade(colony=colony, upgrade_type="oxygen", level=2))
+        db.session.commit()
+
+    response = client.get("/api/colony-state")
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data["resources"]["oxygen"] >= 144
+    assert data["resources"]["total_collected"] >= 24
+    assert data["resources"]["score"] >= 96
+
+    with app.app_context():
+        saved_colony = Colony.query.first()
+        assert saved_colony.oxygen >= 144
+        assert saved_colony.total_collected >= 24
+        assert saved_colony.score >= 96
+        db.drop_all()
+
+
+def test_leaderboard_refreshes_passive_income_before_ranking():
+    app, client = create_logged_in_client()
+
+    with app.app_context():
+        nova = Colony.query.first()
+        nova.score = 5
+        challenger = User(username="Atlas", email="atlas@example.com")
+        challenger.set_password("password123")
+        challenger_colony = Colony(
+            user=challenger,
+            oxygen=120,
+            water=90,
+            minerals=180,
+            score=1,
+            updated_at=datetime.now(timezone.utc) - timedelta(seconds=20),
+        )
+        db.session.add_all([challenger, challenger_colony])
+        db.session.flush()
+        db.session.add(Upgrade(colony=challenger_colony, upgrade_type="minerals", level=1))
+        db.session.commit()
+
+    response = client.get("/api/leaderboard")
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data[0]["username"] == "Atlas"
+    assert data[0]["score"] >= 113
 
     with app.app_context():
         db.drop_all()
