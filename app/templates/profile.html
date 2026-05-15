@@ -11,6 +11,8 @@
     <p>Colony Name: {{ colony.name }}</p>
     <p>Colony Score: {{ "{:,}".format(colony.score) }}</p>
     <p>Total Collected: {{ "{:,}".format(colony.total_collected) }}</p>
+    <p>Best Combo: x{{ colony.best_combo }}</p>
+    <p>Founded: {{ colony.created_at.strftime("%b %d, %Y") }}</p>
   </section>
 
   <section class="profile-card wide">
@@ -19,7 +21,14 @@
       <div><strong>{{ "{:,}".format(colony.oxygen) }}</strong><span>Oxygen</span></div>
       <div><strong>{{ "{:,}".format(colony.water) }}</strong><span>Water</span></div>
       <div><strong>{{ "{:,}".format(colony.minerals) }}</strong><span>Minerals</span></div>
-      <div><strong>{{ colony.upgrades|length }}</strong><span>Extractors</span></div>
+      <div><strong>{{ profile_stats.total_extractors }}</strong><span>Total Extractors</span></div>
+    </div>
+
+    <h2 class="profile-subheading">Extractor Levels</h2>
+    <div class="profile-stats extractor-stats">
+      <div><strong>{{ profile_stats.oxygen_extractors }}</strong><span>Oxygen</span></div>
+      <div><strong>{{ profile_stats.water_extractors }}</strong><span>Water</span></div>
+      <div><strong>{{ profile_stats.mineral_extractors }}</strong><span>Minerals</span></div>
     </div>
   </section>
 </main>

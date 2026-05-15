@@ -1584,6 +1584,14 @@ a {
   color: var(--muted);
 }
 
+.profile-subheading {
+  margin-top: 24px;
+}
+
+.extractor-stats {
+  grid-template-columns: repeat(3, 1fr);
+}
+
 .private-shell {
   display: grid;
   place-items: center;

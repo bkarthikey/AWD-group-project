@@ -7,6 +7,15 @@ A Flask web application prototype for the CITS3403/CITS5505 group project.
 Space Colony Builder is an alien planet survival clicker game.  
 Players click and hold on the planet surface to make a small astronaut explore, dig, and collect resources such as oxygen, water, and minerals. These resources can later be used to build colony extractors that automatically generate resources over time.
 
+## Team members
+
+| UWA ID | Name | GitHub Username |
+| --- | --- | --- |
+| 24444964 | Suraj Kumar Vijay Kumar | surajkumar1818 |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 ## Current pages
 
 - `index.html` — landing page
