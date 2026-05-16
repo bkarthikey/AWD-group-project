@@ -65,16 +65,16 @@
 
             <div class="reward-offer-inputs">
               <div>
-                <label for="offerOxygen">Oxygen offer</label>
-                <input id="offerOxygen" class="form-control" type="number" min="0" value="0" disabled>
+                {{ post_form.offer_oxygen.label }}
+                {{ post_form.offer_oxygen(class="form-control", min="0") }}
               </div>
               <div>
-                <label for="offerWater">Water offer</label>
-                <input id="offerWater" class="form-control" type="number" min="0" value="0" disabled>
+                {{ post_form.offer_water.label }}
+                {{ post_form.offer_water(class="form-control", min="0") }}
               </div>
               <div>
-                <label for="offerMinerals">Mineral offer</label>
-                <input id="offerMinerals" class="form-control" type="number" min="0" value="0" disabled>
+                {{ post_form.offer_minerals.label }}
+                {{ post_form.offer_minerals(class="form-control", min="0") }}
               </div>
             </div>
 
@@ -96,7 +96,7 @@
                 <h2>{{ post.title }}</h2>
                 <p>{{ post.user.username }} · {{ post.user.colony.name if post.user.colony else "New Colony" }} · {{ post.created_at.strftime("%b %d, %Y %H:%M") }}</p>
               </div>
-              <span class="status-chip">Strategy</span>
+              <span class="status-chip">{{ post.comments|length }} comments</span>
             </div>
 
             <p class="post-content">{{ post.content }}</p>
@@ -112,10 +112,10 @@
             {% endif %}
 
             <div class="post-actions">
-              <button class="secondary-btn btn" type="button">Comment</button>
+              <a class="secondary-btn btn" href="#comments-{{ post.id }}">Comment</a>
             </div>
 
-            <div class="comments-section">
+            <div class="comments-section" id="comments-{{ post.id }}">
               <h3>Comments</h3>
               {% for comment in post.comments %}
                 <div class="comment-item">
