@@ -113,6 +113,14 @@
 
             <div class="post-actions">
               <a class="secondary-btn btn" href="#comments-{{ post.id }}">Comment</a>
+              {% if current_user.is_authenticated and post.user_id == current_user.id %}
+                <form method="post" action="{{ url_for('main.discussion') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="form_name" value="delete_post">
+                  <input type="hidden" name="post_id" value="{{ post.id }}">
+                  <button class="danger-btn btn" type="submit">Delete Post</button>
+                </form>
+              {% endif %}
             </div>
 
             <div class="comments-section" id="comments-{{ post.id }}">
