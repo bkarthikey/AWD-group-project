@@ -233,6 +233,68 @@ def discussion():
             flash("Reward exchange created.", "success")
             return redirect(url_for("main.discussion"))
 
+        if request.form.get("form_name") == "update_exchange":
+            exchange_id = request.form.get("exchange_id", type=int)
+            exchange = db.session.get(RewardExchange, exchange_id)
+            resource_type = request.form.get("resource_type", "").strip()
+            amount = request.form.get("amount", type=int)
+            receiver_username = request.form.get("receiver_username", "").strip()
+
+            if not exchange:
+                flash("Reward exchange not found.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.sender_id != current_user.id:
+                flash("You can only update your own reward exchanges.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.status != "open":
+                flash("Only open reward exchanges can be updated.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if resource_type not in {"oxygen", "water", "minerals"} or amount is None or not 1 <= amount <= 100000:
+                flash("Please provide a valid resource and amount.", "error")
+                return redirect(url_for("main.discussion"))
+
+            receiver = None
+            if exchange.exchange_type == "request" and receiver_username:
+                flash("Requests are open to any commander and cannot name a receiver.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.exchange_type == "offer" and receiver_username:
+                receiver = User.query.filter_by(username=receiver_username).first()
+                if not receiver:
+                    flash("Receiver username not found.", "error")
+                    return redirect(url_for("main.discussion"))
+
+            exchange.resource_type = resource_type
+            exchange.amount = amount
+            exchange.receiver = receiver
+            db.session.commit()
+            flash("Reward exchange updated.", "success")
+            return redirect(url_for("main.discussion"))
+
+        if request.form.get("form_name") == "delete_exchange":
+            exchange_id = request.form.get("exchange_id", type=int)
+            exchange = db.session.get(RewardExchange, exchange_id)
+
+            if not exchange:
+                flash("Reward exchange not found.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.sender_id != current_user.id:
+                flash("You can only delete your own reward exchanges.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.status != "open":
+                flash("Only open reward exchanges can be deleted.", "error")
+                return redirect(url_for("main.discussion"))
+
+            db.session.delete(exchange)
+            db.session.commit()
+            flash("Reward exchange deleted.", "success")
+            return redirect(url_for("main.discussion"))
+
         if request.form.get("form_name") == "accept_exchange":
             exchange_id = request.form.get("exchange_id", type=int)
             exchange = db.session.get(RewardExchange, exchange_id)
