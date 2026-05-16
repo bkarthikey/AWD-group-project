@@ -150,7 +150,7 @@
     <aside class="discussion-sidebar">
       <section class="discussion-panel reward-exchange-panel">
         <p class="eyebrow mini">Reward exchange</p>
-        <h2>Open Resource Offers</h2>
+        <h2>Open Resource Exchanges</h2>
         <p>Offer spare resources to other commanders or request support when your colony is short on supplies.</p>
 
         <div class="exchange-list">
@@ -158,9 +158,13 @@
             <div class="exchange-item">
               <div>
                 <strong>{{ offer.sender.username }}</strong>
-                <span>to {{ offer.receiver.username if offer.receiver else "Any commander" }}</span>
+                {% if offer.exchange_type == "request" %}
+                  <span>requests from Any commander</span>
+                {% else %}
+                  <span>offers to {{ offer.receiver.username if offer.receiver else "Any commander" }}</span>
+                {% endif %}
               </div>
-              <p>{{ offer.amount }} {{ offer.resource_type }}</p>
+              <p>{{ offer.amount }} {{ offer.resource_type }} · {{ offer.exchange_type|title }}</p>
               <em>{{ offer.status|title }}</em>
               {% if current_user.is_authenticated
                     and offer.status == "open"
@@ -170,7 +174,9 @@
                   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="form_name" value="accept_exchange">
                   <input type="hidden" name="exchange_id" value="{{ offer.id }}">
-                  <button class="secondary-btn btn" type="submit">Accept Offer</button>
+                  <button class="secondary-btn btn" type="submit">
+                    {{ "Fulfill Request" if offer.exchange_type == "request" else "Accept Offer" }}
+                  </button>
                 </form>
               {% endif %}
             </div>
@@ -184,11 +190,14 @@
 
       <section class="discussion-panel reward-exchange-panel">
         <p class="eyebrow mini">Create exchange</p>
-        <h2>Offer Rewards</h2>
+        <h2>Offer or Request Resources</h2>
         {% if current_user.is_authenticated %}
           <form class="exchange-form" method="post" action="{{ url_for('main.discussion') }}">
             {{ exchange_form.hidden_tag() }}
             <input type="hidden" name="form_name" value="create_exchange">
+
+            {{ exchange_form.exchange_type.label }}
+            {{ exchange_form.exchange_type(class="form-control") }}
 
             {{ exchange_form.resource_type.label }}
             {{ exchange_form.resource_type(class="form-control") }}
@@ -197,13 +206,13 @@
             {{ exchange_form.amount(class="form-control", min="1") }}
 
             {{ exchange_form.receiver_username.label }}
-            {{ exchange_form.receiver_username(class="form-control", placeholder="Username or leave blank") }}
+            {{ exchange_form.receiver_username(class="form-control", placeholder="Optional for offers only") }}
 
             {{ exchange_form.submit(class="primary-btn btn") }}
           </form>
         {% else %}
           <div class="discussion-empty compact">
-            <p>Log in to create oxygen, water, or mineral exchange offers.</p>
+            <p>Log in to offer spare resources or request oxygen, water, and minerals from the community.</p>
             <a href="{{ url_for('main.login') }}" class="primary-btn btn">Login to Trade</a>
           </div>
         {% endif %}
