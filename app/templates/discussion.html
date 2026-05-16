@@ -137,7 +137,7 @@
 
               {% if current_user.is_authenticated %}
                 <form class="comment-form" method="post" action="{{ url_for('main.discussion') }}">
-                  {{ comment_form.hidden_tag() }}
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="form_name" value="add_comment">
                   <input type="hidden" name="comment-post_id" value="{{ post.id }}">
                   {{ comment_form.content(class="form-control", rows="2", placeholder="Add a comment...") }}
