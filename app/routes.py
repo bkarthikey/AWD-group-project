@@ -129,8 +129,27 @@ def discussion():
                 image_filename=save_discussion_image(post_form.image.data),
             )
             db.session.add(post)
+            attached_offers = []
+            for resource_type, amount in {
+                "oxygen": post_form.offer_oxygen.data or 0,
+                "water": post_form.offer_water.data or 0,
+                "minerals": post_form.offer_minerals.data or 0,
+            }.items():
+                if amount > 0:
+                    attached_offers.append(
+                        RewardExchange(
+                            sender=current_user,
+                            resource_type=resource_type,
+                            amount=amount,
+                            status="open",
+                        )
+                    )
+            db.session.add_all(attached_offers)
             db.session.commit()
-            flash("Discussion post created.", "success")
+            if attached_offers:
+                flash("Discussion post and resource offers created.", "success")
+            else:
+                flash("Discussion post created.", "success")
             return redirect(url_for("main.discussion"))
 
         if request.form.get("form_name") == "add_comment" and comment_form.validate_on_submit():
