@@ -141,6 +141,7 @@ def discussion():
                             sender=current_user,
                             resource_type=resource_type,
                             amount=amount,
+                            exchange_type="offer",
                             status="open",
                         )
                     )
@@ -171,8 +172,13 @@ def discussion():
         if request.form.get("form_name") == "create_exchange" and exchange_form.validate_on_submit():
             receiver_username = (exchange_form.receiver_username.data or "").strip()
             receiver = None
+            exchange_type = exchange_form.exchange_type.data
 
-            if receiver_username:
+            if exchange_type == "request" and receiver_username:
+                flash("Requests are open to any commander and cannot name a receiver.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange_type == "offer" and receiver_username:
                 receiver = User.query.filter_by(username=receiver_username).first()
                 if not receiver:
                     flash("Receiver username not found.", "error")
@@ -183,11 +189,12 @@ def discussion():
                 receiver=receiver,
                 resource_type=exchange_form.resource_type.data,
                 amount=exchange_form.amount.data,
+                exchange_type=exchange_type,
                 status="open",
             )
             db.session.add(exchange)
             db.session.commit()
-            flash("Reward exchange offer created.", "success")
+            flash("Reward exchange created.", "success")
             return redirect(url_for("main.discussion"))
 
         if request.form.get("form_name") == "accept_exchange":
@@ -202,28 +209,40 @@ def discussion():
                 flash("You cannot accept your own reward exchange.", "error")
                 return redirect(url_for("main.discussion"))
 
-            if exchange.receiver_id and exchange.receiver_id != current_user.id:
+            if exchange.exchange_type == "offer" and exchange.receiver_id and exchange.receiver_id != current_user.id:
                 flash("This reward exchange is reserved for another commander.", "error")
                 return redirect(url_for("main.discussion"))
 
-            sender_colony = ensure_colony(exchange.sender)
-            receiver_colony = ensure_colony(current_user)
-            apply_passive_income(sender_colony)
-            apply_passive_income(receiver_colony)
+            requester_colony = ensure_colony(exchange.sender)
+            fulfiller_colony = ensure_colony(current_user)
+            apply_passive_income(requester_colony)
+            apply_passive_income(fulfiller_colony)
             db.session.flush()
 
-            sender_balance = getattr(sender_colony, exchange.resource_type)
-            if sender_balance < exchange.amount:
+            if exchange.exchange_type == "offer":
+                source_colony = requester_colony
+                destination_colony = fulfiller_colony
+                insufficient_message = "Sender no longer has enough resources for this exchange."
+            else:
+                source_colony = fulfiller_colony
+                destination_colony = requester_colony
+                insufficient_message = "You do not have enough resources to fulfill this request."
+
+            source_balance = getattr(source_colony, exchange.resource_type)
+            if source_balance < exchange.amount:
                 db.session.rollback()
-                flash("Sender no longer has enough resources for this exchange.", "error")
+                flash(insufficient_message, "error")
                 return redirect(url_for("main.discussion"))
 
-            setattr(sender_colony, exchange.resource_type, sender_balance - exchange.amount)
-            setattr(receiver_colony, exchange.resource_type, getattr(receiver_colony, exchange.resource_type) + exchange.amount)
+            setattr(source_colony, exchange.resource_type, source_balance - exchange.amount)
+            setattr(destination_colony, exchange.resource_type, getattr(destination_colony, exchange.resource_type) + exchange.amount)
             exchange.receiver = current_user
             exchange.status = "completed"
             db.session.commit()
-            flash("Reward exchange completed.", "success")
+            if exchange.exchange_type == "offer":
+                flash("Reward exchange completed.", "success")
+            else:
+                flash("Resource request fulfilled.", "success")
             return redirect(url_for("main.discussion"))
 
         flash("Please check the discussion form and try again.", "error")

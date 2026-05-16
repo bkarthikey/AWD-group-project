@@ -118,6 +118,7 @@ class RewardExchange(db.Model):
     receiver_id = db.Column(db.Integer, db.ForeignKey("user.id"))
     resource_type = db.Column(db.String(30), nullable=False)
     amount = db.Column(db.Integer, nullable=False)
+    exchange_type = db.Column(db.String(20), default="offer", nullable=False)
     status = db.Column(db.String(30), default="open", nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 

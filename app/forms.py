@@ -54,6 +54,14 @@ class CommentForm(FlaskForm):
 
 
 class RewardExchangeForm(FlaskForm):
+    exchange_type = SelectField(
+        "Exchange type",
+        choices=[
+            ("offer", "Offer resources"),
+            ("request", "Request resources"),
+        ],
+        validators=[DataRequired()],
+    )
     resource_type = SelectField(
         "Resource",
         choices=[
@@ -64,5 +72,5 @@ class RewardExchangeForm(FlaskForm):
         validators=[DataRequired()],
     )
     amount = IntegerField("Amount", default=25, validators=[DataRequired(), NumberRange(min=1, max=100000)])
-    receiver_username = StringField("Receiver", validators=[Optional(), Length(max=80)])
-    submit = SubmitField("Create Offer")
+    receiver_username = StringField("Receiver for offers", validators=[Optional(), Length(max=80)])
+    submit = SubmitField("Create Exchange")
