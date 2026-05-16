@@ -165,6 +165,12 @@
                 {% endif %}
               </div>
               <p>{{ offer.amount }} {{ offer.resource_type }} · {{ offer.exchange_type|title }}</p>
+              {% if offer.exchange_type == "request" and offer.status == "completed" and offer.receiver %}
+                <small>Fulfilled by {{ offer.receiver.username }}</small>
+              {% endif %}
+              {% if offer.thanks_message %}
+                <blockquote class="thanks-note">Thanks from {{ offer.sender.username }}: "{{ offer.thanks_message }}"</blockquote>
+              {% endif %}
               <em>{{ offer.status|title }}</em>
               {% if current_user.is_authenticated
                     and offer.status == "open"
@@ -187,6 +193,39 @@
           {% endfor %}
         </div>
       </section>
+
+      {% if current_user.is_authenticated %}
+        <section class="discussion-panel reward-exchange-panel">
+          <p class="eyebrow mini">Fulfilled requests</p>
+          <h2>Your Completed Requests</h2>
+          <p>See who helped your colony and send a short thanks message back.</p>
+
+          <div class="fulfilled-request-list">
+            {% for request_item in fulfilled_requests %}
+              <div class="fulfilled-request-item">
+                <strong>{{ request_item.receiver.username }}</strong>
+                <span>fulfilled your request for {{ request_item.amount }} {{ request_item.resource_type }}</span>
+
+                {% if request_item.thanks_message %}
+                  <blockquote class="thanks-note">You sent: "{{ request_item.thanks_message }}"</blockquote>
+                {% else %}
+                  <form class="thanks-form" method="post" action="{{ url_for('main.discussion') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_name" value="send_thanks">
+                    <input type="hidden" name="thanks-exchange_id" value="{{ request_item.id }}">
+                    {{ thanks_form.message(class="form-control", rows="2", placeholder="Thanks for helping my colony survive.") }}
+                    {{ thanks_form.submit(class="secondary-btn btn") }}
+                  </form>
+                {% endif %}
+              </div>
+            {% else %}
+              <div class="discussion-empty compact">
+                <p>No fulfilled requests yet.</p>
+              </div>
+            {% endfor %}
+          </div>
+        </section>
+      {% endif %}
 
       <section class="discussion-panel reward-exchange-panel">
         <p class="eyebrow mini">Create exchange</p>
