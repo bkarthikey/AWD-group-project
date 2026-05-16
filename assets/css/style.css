@@ -1469,6 +1469,35 @@ a {
   margin-top: 10px;
 }
 
+.exchange-manage {
+  margin-top: 10px;
+}
+
+.exchange-manage summary {
+  cursor: pointer;
+  color: var(--cyan);
+  font-weight: 800;
+}
+
+.exchange-edit-form {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.exchange-edit-form label {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.exchange-edit-form .form-control {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: rgba(255,255,255,0.07);
+  color: var(--text);
+}
+
 .fulfilled-request-list {
   display: grid;
   gap: 10px;
