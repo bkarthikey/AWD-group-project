@@ -193,6 +193,47 @@
                   </button>
                 </form>
               {% endif %}
+              {% if current_user.is_authenticated and offer.status == "open" and offer.sender_id == current_user.id %}
+                <details class="exchange-manage">
+                  <summary>Edit Exchange</summary>
+                  <form class="exchange-edit-form" method="post" action="{{ url_for('main.discussion') }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="form_name" value="update_exchange">
+                    <input type="hidden" name="exchange_id" value="{{ offer.id }}">
+
+                    <label for="resource-type-{{ offer.id }}">Resource</label>
+                    <select id="resource-type-{{ offer.id }}" class="form-control" name="resource_type">
+                      <option value="oxygen" {% if offer.resource_type == "oxygen" %}selected{% endif %}>oxygen</option>
+                      <option value="water" {% if offer.resource_type == "water" %}selected{% endif %}>water</option>
+                      <option value="minerals" {% if offer.resource_type == "minerals" %}selected{% endif %}>minerals</option>
+                    </select>
+
+                    <label for="amount-{{ offer.id }}">Amount</label>
+                    <input id="amount-{{ offer.id }}" class="form-control" type="number" name="amount" min="1" max="100000" value="{{ offer.amount }}">
+
+                    {% if offer.exchange_type == "offer" %}
+                      <label for="receiver-{{ offer.id }}">Receiver for offer</label>
+                      <input
+                        id="receiver-{{ offer.id }}"
+                        class="form-control"
+                        type="text"
+                        name="receiver_username"
+                        value="{{ offer.receiver.username if offer.receiver else '' }}"
+                        placeholder="Optional"
+                      >
+                    {% endif %}
+
+                    <button class="secondary-btn btn" type="submit">Update Exchange</button>
+                  </form>
+                </details>
+
+                <form method="post" action="{{ url_for('main.discussion') }}">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="form_name" value="delete_exchange">
+                  <input type="hidden" name="exchange_id" value="{{ offer.id }}">
+                  <button class="danger-btn btn" type="submit">Delete Exchange</button>
+                </form>
+              {% endif %}
             </div>
           {% else %}
             <div class="discussion-empty compact">
