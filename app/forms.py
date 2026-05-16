@@ -41,6 +41,9 @@ class DiscussionPostForm(FlaskForm):
         "Optional colony screenshot",
         validators=[FileAllowed(["png", "jpg", "jpeg", "gif", "webp"], "Images only.")],
     )
+    offer_oxygen = IntegerField("Oxygen offer", default=0, validators=[Optional(), NumberRange(min=0, max=100000)])
+    offer_water = IntegerField("Water offer", default=0, validators=[Optional(), NumberRange(min=0, max=100000)])
+    offer_minerals = IntegerField("Mineral offer", default=0, validators=[Optional(), NumberRange(min=0, max=100000)])
     submit = SubmitField("Post Strategy")
 
 
