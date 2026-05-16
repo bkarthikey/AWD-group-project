@@ -281,3 +281,15 @@ def profile(username):
 @login_required
 def my_profile():
     return redirect(url_for("main.profile", username=current_user.username))
+@main_bp.post("/profile/privacy")
+@login_required
+def update_profile_privacy():
+    current_user.is_public = "is_public" in request.form
+    db.session.commit()
+
+    if current_user.is_public:
+        flash("Your colony profile is now public.", "success")
+    else:
+        flash("Your colony profile is now private.", "success")
+
+    return redirect(url_for("main.my_profile"))
