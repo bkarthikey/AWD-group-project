@@ -1345,6 +1345,22 @@ a {
   margin-top: 16px;
 }
 
+.post-actions form {
+  margin: 0;
+}
+
+.danger-btn {
+  border: 1px solid rgba(255, 117, 145, 0.34);
+  background: rgba(255, 117, 145, 0.1);
+  color: #ffdce4;
+}
+
+.danger-btn:hover {
+  border-color: rgba(255, 117, 145, 0.55);
+  background: rgba(255, 117, 145, 0.18);
+  color: #fff2f5;
+}
+
 .comments-section {
   margin-top: 18px;
   padding-top: 16px;

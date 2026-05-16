@@ -42,6 +42,15 @@ def save_discussion_image(file_storage):
     return stored_name
 
 
+def delete_discussion_image(image_filename):
+    if not image_filename:
+        return
+
+    image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], image_filename)
+    if os.path.exists(image_path):
+        os.remove(image_path)
+
+
 @main_bp.get("/")
 def index():
     return render_template("index.html")
@@ -175,6 +184,25 @@ def discussion():
             db.session.add(comment)
             db.session.commit()
             flash("Comment added.", "success")
+            return redirect(url_for("main.discussion"))
+
+        if request.form.get("form_name") == "delete_post":
+            post_id = request.form.get("post_id", type=int)
+            post = db.session.get(DiscussionPost, post_id)
+
+            if not post:
+                flash("Discussion post not found.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if post.user_id != current_user.id:
+                flash("You can only delete your own discussion posts.", "error")
+                return redirect(url_for("main.discussion"))
+
+            image_filename = post.image_filename
+            db.session.delete(post)
+            db.session.commit()
+            delete_discussion_image(image_filename)
+            flash("Discussion post deleted.", "success")
             return redirect(url_for("main.discussion"))
 
         if request.form.get("form_name") == "create_exchange" and exchange_form.validate_on_submit():
