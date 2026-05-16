@@ -54,7 +54,6 @@ def apply_passive_income(colony, now=None):
         total_earned += earned
 
     colony.total_collected += total_earned
-    colony.score += total_earned * 4
     colony.updated_at = now
     return total_earned > 0
 

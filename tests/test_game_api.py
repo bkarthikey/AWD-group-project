@@ -139,17 +139,17 @@ def test_colony_state_applies_passive_income_from_extractors():
     data = response.get_json()
     assert data["resources"]["oxygen"] >= 144
     assert data["resources"]["total_collected"] >= 24
-    assert data["resources"]["score"] >= 96
+    assert data["resources"]["score"] == 0
 
     with app.app_context():
         saved_colony = Colony.query.first()
         assert saved_colony.oxygen >= 144
         assert saved_colony.total_collected >= 24
-        assert saved_colony.score >= 96
+        assert saved_colony.score == 0
         db.drop_all()
 
 
-def test_leaderboard_refreshes_passive_income_before_ranking():
+def test_leaderboard_refreshes_passive_income_without_changing_score_ranking():
     app, client = create_logged_in_client()
 
     with app.app_context():
@@ -174,8 +174,8 @@ def test_leaderboard_refreshes_passive_income_before_ranking():
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data[0]["username"] == "Atlas"
-    assert data[0]["score"] >= 113
+    assert data[0]["username"] == "Nova"
+    assert data[0]["score"] == 5
 
     with app.app_context():
         db.drop_all()
