@@ -120,6 +120,7 @@ class RewardExchange(db.Model):
     amount = db.Column(db.Integer, nullable=False)
     exchange_type = db.Column(db.String(20), default="offer", nullable=False)
     status = db.Column(db.String(30), default="open", nullable=False)
+    thanks_message = db.Column(db.String(240))
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
 
     sender = db.relationship("User", back_populates="sent_reward_exchanges", foreign_keys=[sender_id])
