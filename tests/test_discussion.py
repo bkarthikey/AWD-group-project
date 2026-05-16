@@ -206,6 +206,7 @@ def test_logged_in_user_can_create_reward_exchange_offer():
         "/discussion",
         data={
             "form_name": "create_exchange",
+            "exchange-exchange_type": "offer",
             "exchange-resource_type": "water",
             "exchange-amount": "45",
             "exchange-receiver_username": "Atlas",
@@ -221,6 +222,7 @@ def test_logged_in_user_can_create_reward_exchange_offer():
         saved_exchange = RewardExchange.query.filter_by(resource_type="water").first()
         assert saved_exchange is not None
         assert saved_exchange.amount == 45
+        assert saved_exchange.exchange_type == "offer"
         assert saved_exchange.sender.username == "Vega"
         assert saved_exchange.receiver.username == "Atlas"
 
@@ -240,6 +242,7 @@ def test_reward_exchange_requires_existing_receiver_when_named():
         "/discussion",
         data={
             "form_name": "create_exchange",
+            "exchange-exchange_type": "offer",
             "exchange-resource_type": "oxygen",
             "exchange-amount": "30",
             "exchange-receiver_username": "MissingUser",
@@ -252,6 +255,129 @@ def test_reward_exchange_requires_existing_receiver_when_named():
 
     with app.app_context():
         assert RewardExchange.query.count() == 0
+
+
+def test_logged_in_user_can_create_open_resource_request():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        user = User(username="Rhea", email="rhea@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+
+    client.post("/login", data={"email": "rhea@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "create_exchange",
+            "exchange-exchange_type": "request",
+            "exchange-resource_type": "minerals",
+            "exchange-amount": "35",
+            "exchange-receiver_username": "",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"35 minerals" in response.data
+    assert b"Request" in response.data
+
+    with app.app_context():
+        request_exchange = RewardExchange.query.first()
+        assert request_exchange.exchange_type == "request"
+        assert request_exchange.sender.username == "Rhea"
+        assert request_exchange.receiver is None
+
+
+def test_resource_request_can_be_fulfilled_by_another_user():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        requester = User(username="NeedHelp", email="need@example.com")
+        fulfiller = User(username="Helper", email="helper@example.com")
+        requester.set_password("password123")
+        fulfiller.set_password("password123")
+        requester_colony = Colony(user=requester, water=10)
+        fulfiller_colony = Colony(user=fulfiller, water=80)
+        exchange = RewardExchange(
+            sender=requester,
+            resource_type="water",
+            amount=25,
+            exchange_type="request",
+            status="open",
+        )
+        db.session.add_all([requester, fulfiller, requester_colony, fulfiller_colony, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "helper@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "accept_exchange",
+            "exchange_id": str(exchange_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Resource request fulfilled." in response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        requester = User.query.filter_by(username="NeedHelp").first()
+        fulfiller = User.query.filter_by(username="Helper").first()
+        assert saved_exchange.status == "completed"
+        assert saved_exchange.receiver.username == "Helper"
+        assert requester.colony.water == 35
+        assert fulfiller.colony.water == 55
+
+
+def test_resource_request_rejects_fulfillment_when_helper_lacks_resources():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        requester = User(username="Needy", email="needy@example.com")
+        helper = User(username="LowSupply", email="low@example.com")
+        requester.set_password("password123")
+        helper.set_password("password123")
+        requester_colony = Colony(user=requester, oxygen=15)
+        helper_colony = Colony(user=helper, oxygen=10)
+        exchange = RewardExchange(
+            sender=requester,
+            resource_type="oxygen",
+            amount=30,
+            exchange_type="request",
+            status="open",
+        )
+        db.session.add_all([requester, helper, requester_colony, helper_colony, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "low@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "accept_exchange",
+            "exchange_id": str(exchange_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"You do not have enough resources to fulfill this request." in response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        requester = User.query.filter_by(username="Needy").first()
+        helper = User.query.filter_by(username="LowSupply").first()
+        assert saved_exchange.status == "open"
+        assert requester.colony.oxygen == 15
+        assert helper.colony.oxygen == 10
 
 
 def test_user_can_accept_open_reward_exchange_and_receive_resources():
