@@ -88,6 +88,42 @@ def test_logged_in_user_can_create_discussion_post(tmp_path):
         assert (tmp_path / saved_post.image_filename).exists()
 
 
+def test_post_creation_can_add_open_resource_offers():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        user = User(username="Astra", email="astra@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+
+    client.post("/login", data={"email": "astra@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "create_post",
+            "post-title": "Trading spare supplies",
+            "post-content": "I can help new colonies with starter resources.",
+            "post-offer_oxygen": "30",
+            "post-offer_water": "20",
+            "post-offer_minerals": "0",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Discussion post and resource offers created." in response.data
+    assert b"30 oxygen" in response.data
+    assert b"20 water" in response.data
+
+    with app.app_context():
+        offers = RewardExchange.query.order_by(RewardExchange.resource_type.asc()).all()
+        assert len(offers) == 2
+        assert {(offer.resource_type, offer.amount) for offer in offers} == {("oxygen", 30), ("water", 20)}
+        assert all(offer.status == "open" for offer in offers)
+
+
 def test_discussion_post_rejects_non_image_upload(tmp_path):
     app = create_app(TestConfig)
     app.config["UPLOAD_FOLDER"] = tmp_path
