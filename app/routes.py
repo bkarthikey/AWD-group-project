@@ -7,7 +7,14 @@ from werkzeug.utils import secure_filename
 
 from .colony_service import apply_passive_income, get_ranked_public_colonies, get_upgrade_levels
 from .extensions import db
-from .forms import CommentForm, DiscussionPostForm, LoginForm, RegisterForm, RewardExchangeForm
+from .forms import (
+    CommentForm,
+    DiscussionPostForm,
+    LoginForm,
+    RegisterForm,
+    RewardExchangeForm,
+    ThanksMessageForm,
+)
 from .models import Colony, Comment, DiscussionPost, RewardExchange, User
 
 main_bp = Blueprint("main", __name__)
@@ -115,6 +122,7 @@ def discussion():
     post_form = DiscussionPostForm(prefix="post")
     comment_form = CommentForm(prefix="comment")
     exchange_form = RewardExchangeForm(prefix="exchange")
+    thanks_form = ThanksMessageForm(prefix="thanks")
 
     if request.method == "POST":
         if not current_user.is_authenticated:
@@ -245,6 +253,26 @@ def discussion():
                 flash("Resource request fulfilled.", "success")
             return redirect(url_for("main.discussion"))
 
+        if request.form.get("form_name") == "send_thanks" and thanks_form.validate_on_submit():
+            exchange = db.session.get(RewardExchange, int(thanks_form.exchange_id.data))
+
+            if not exchange or exchange.exchange_type != "request" or exchange.status != "completed":
+                flash("That fulfilled request is not available for thanks.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.sender_id != current_user.id:
+                flash("Only the requester can send thanks for this exchange.", "error")
+                return redirect(url_for("main.discussion"))
+
+            if exchange.receiver_id is None:
+                flash("This request has not been fulfilled yet.", "error")
+                return redirect(url_for("main.discussion"))
+
+            exchange.thanks_message = thanks_form.message.data.strip()
+            db.session.commit()
+            flash("Thanks message sent.", "success")
+            return redirect(url_for("main.discussion"))
+
         flash("Please check the discussion form and try again.", "error")
 
     posts = (
@@ -261,6 +289,19 @@ def discussion():
         .all()
     )
 
+    fulfilled_requests = []
+    if current_user.is_authenticated:
+        fulfilled_requests = (
+            RewardExchange.query
+            .filter_by(
+                sender_id=current_user.id,
+                exchange_type="request",
+                status="completed",
+            )
+            .order_by(RewardExchange.created_at.desc())
+            .all()
+        )
+
     return render_template(
         "discussion.html",
         posts=posts,
@@ -268,6 +309,8 @@ def discussion():
         post_form=post_form,
         comment_form=comment_form,
         exchange_form=exchange_form,
+        thanks_form=thanks_form,
+        fulfilled_requests=fulfilled_requests,
     )
 
 
