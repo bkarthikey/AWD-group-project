@@ -361,6 +361,187 @@ def test_logged_in_user_can_create_open_resource_request():
         assert request_exchange.receiver is None
 
 
+def test_owner_can_update_open_reward_exchange_offer():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        sender = User(username="Updater", email="updater@example.com")
+        receiver = User(username="Target", email="target@example.com")
+        sender.set_password("password123")
+        receiver.set_password("password123")
+        exchange = RewardExchange(
+            sender=sender,
+            resource_type="oxygen",
+            amount=20,
+            exchange_type="offer",
+            status="open",
+        )
+        db.session.add_all([sender, receiver, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "updater@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "update_exchange",
+            "exchange_id": str(exchange_id),
+            "resource_type": "minerals",
+            "amount": "45",
+            "receiver_username": "Target",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Reward exchange updated." in response.data
+    assert b"45 minerals" in response.data
+    assert b"to Target" in response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        assert saved_exchange.resource_type == "minerals"
+        assert saved_exchange.amount == 45
+        assert saved_exchange.receiver.username == "Target"
+
+
+def test_owner_can_delete_open_reward_exchange():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        sender = User(username="Deleter", email="deleter@example.com")
+        sender.set_password("password123")
+        exchange = RewardExchange(
+            sender=sender,
+            resource_type="water",
+            amount=30,
+            exchange_type="request",
+            status="open",
+        )
+        db.session.add_all([sender, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "deleter@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "delete_exchange",
+            "exchange_id": str(exchange_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Reward exchange deleted." in response.data
+
+    with app.app_context():
+        assert RewardExchange.query.count() == 0
+
+
+def test_user_cannot_update_or_delete_another_users_exchange():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        owner = User(username="ExchangeOwner", email="exchange-owner@example.com")
+        other_user = User(username="ExchangeOther", email="exchange-other@example.com")
+        owner.set_password("password123")
+        other_user.set_password("password123")
+        exchange = RewardExchange(
+            sender=owner,
+            resource_type="oxygen",
+            amount=20,
+            exchange_type="offer",
+            status="open",
+        )
+        db.session.add_all([owner, other_user, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "exchange-other@example.com", "password": "password123"})
+    update_response = client.post(
+        "/discussion",
+        data={
+            "form_name": "update_exchange",
+            "exchange_id": str(exchange_id),
+            "resource_type": "water",
+            "amount": "50",
+            "receiver_username": "",
+        },
+        follow_redirects=True,
+    )
+    delete_response = client.post(
+        "/discussion",
+        data={
+            "form_name": "delete_exchange",
+            "exchange_id": str(exchange_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert b"You can only update your own reward exchanges." in update_response.data
+    assert b"You can only delete your own reward exchanges." in delete_response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        assert saved_exchange.resource_type == "oxygen"
+        assert saved_exchange.amount == 20
+
+
+def test_completed_exchange_cannot_be_updated_or_deleted():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        sender = User(username="Locked", email="locked@example.com")
+        receiver = User(username="Done", email="done@example.com")
+        sender.set_password("password123")
+        receiver.set_password("password123")
+        exchange = RewardExchange(
+            sender=sender,
+            receiver=receiver,
+            resource_type="water",
+            amount=25,
+            exchange_type="offer",
+            status="completed",
+        )
+        db.session.add_all([sender, receiver, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "locked@example.com", "password": "password123"})
+    update_response = client.post(
+        "/discussion",
+        data={
+            "form_name": "update_exchange",
+            "exchange_id": str(exchange_id),
+            "resource_type": "minerals",
+            "amount": "60",
+            "receiver_username": "",
+        },
+        follow_redirects=True,
+    )
+    delete_response = client.post(
+        "/discussion",
+        data={
+            "form_name": "delete_exchange",
+            "exchange_id": str(exchange_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert b"Only open reward exchanges can be updated." in update_response.data
+    assert b"Only open reward exchanges can be deleted." in delete_response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        assert saved_exchange.resource_type == "water"
+        assert saved_exchange.amount == 25
+
+
 def test_resource_request_can_be_fulfilled_by_another_user():
     app = create_app(TestConfig)
     client = app.test_client()
