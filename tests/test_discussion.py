@@ -189,6 +189,76 @@ def test_logged_in_user_can_comment_on_discussion_post():
         assert saved_comment.post_id == post_id
 
 
+def test_post_owner_can_delete_own_discussion_post_and_uploaded_image(tmp_path):
+    app = create_app(TestConfig)
+    app.config["UPLOAD_FOLDER"] = tmp_path
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        user = User(username="Owner", email="owner@example.com")
+        user.set_password("password123")
+        post = DiscussionPost(
+            user=user,
+            title="Delete my plan",
+            content="This strategy is outdated.",
+            image_filename="old-plan.png",
+        )
+        db.session.add_all([user, post])
+        db.session.commit()
+        post_id = post.id
+        (tmp_path / "old-plan.png").write_bytes(b"image")
+
+    client.post("/login", data={"email": "owner@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "delete_post",
+            "post_id": str(post_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Discussion post deleted." in response.data
+    assert b"Delete my plan" not in response.data
+    assert not (tmp_path / "old-plan.png").exists()
+
+    with app.app_context():
+        assert DiscussionPost.query.count() == 0
+
+
+def test_user_cannot_delete_another_users_discussion_post():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        owner = User(username="PostOwner", email="post-owner@example.com")
+        other_user = User(username="OtherUser", email="other-user@example.com")
+        owner.set_password("password123")
+        other_user.set_password("password123")
+        post = DiscussionPost(user=owner, title="Protected plan", content="Keep this post.")
+        db.session.add_all([owner, other_user, post])
+        db.session.commit()
+        post_id = post.id
+
+    client.post("/login", data={"email": "other-user@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "delete_post",
+            "post_id": str(post_id),
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"You can only delete your own discussion posts." in response.data
+    assert b"Protected plan" in response.data
+
+    with app.app_context():
+        assert DiscussionPost.query.count() == 1
+
+
 def test_logged_in_user_can_create_reward_exchange_offer():
     app = create_app(TestConfig)
     client = app.test_client()
