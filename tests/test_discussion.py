@@ -336,6 +336,89 @@ def test_resource_request_can_be_fulfilled_by_another_user():
         assert fulfiller.colony.water == 55
 
 
+def test_requester_can_thank_user_who_fulfilled_request():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        requester = User(username="Grateful", email="grateful@example.com")
+        helper = User(username="Support", email="support@example.com")
+        requester.set_password("password123")
+        helper.set_password("password123")
+        exchange = RewardExchange(
+            sender=requester,
+            receiver=helper,
+            resource_type="oxygen",
+            amount=20,
+            exchange_type="request",
+            status="completed",
+        )
+        db.session.add_all([requester, helper, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "grateful@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "send_thanks",
+            "thanks-exchange_id": str(exchange_id),
+            "thanks-message": "Thanks for helping my colony survive.",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Thanks message sent." in response.data
+    assert b"Support" in response.data
+    assert b"Thanks for helping my colony survive." in response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        assert saved_exchange.thanks_message == "Thanks for helping my colony survive."
+
+
+def test_only_requester_can_send_thanks_for_completed_request():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        requester = User(username="Requester", email="requester@example.com")
+        helper = User(username="HelperTwo", email="helper-two@example.com")
+        outsider = User(username="Outsider", email="outsider@example.com")
+        for user in (requester, helper, outsider):
+            user.set_password("password123")
+        exchange = RewardExchange(
+            sender=requester,
+            receiver=helper,
+            resource_type="minerals",
+            amount=30,
+            exchange_type="request",
+            status="completed",
+        )
+        db.session.add_all([requester, helper, outsider, exchange])
+        db.session.commit()
+        exchange_id = exchange.id
+
+    client.post("/login", data={"email": "outsider@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "send_thanks",
+            "thanks-exchange_id": str(exchange_id),
+            "thanks-message": "Trying to thank from wrong account.",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Only the requester can send thanks for this exchange." in response.data
+
+    with app.app_context():
+        saved_exchange = RewardExchange.query.first()
+        assert saved_exchange.thanks_message is None
+
+
 def test_resource_request_rejects_fulfillment_when_helper_lacks_resources():
     app = create_app(TestConfig)
     client = app.test_client()
