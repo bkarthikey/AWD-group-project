@@ -74,3 +74,9 @@ class RewardExchangeForm(FlaskForm):
     amount = IntegerField("Amount", default=25, validators=[DataRequired(), NumberRange(min=1, max=100000)])
     receiver_username = StringField("Receiver for offers", validators=[Optional(), Length(max=80)])
     submit = SubmitField("Create Exchange")
+
+
+class ThanksMessageForm(FlaskForm):
+    exchange_id = HiddenField("Exchange ID", validators=[DataRequired()])
+    message = TextAreaField("Thanks message", validators=[DataRequired(), Length(min=2, max=240)])
+    submit = SubmitField("Send Thanks")
