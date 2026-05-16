@@ -189,6 +189,61 @@ def test_logged_in_user_can_comment_on_discussion_post():
         assert saved_comment.post_id == post_id
 
 
+def test_rendered_comment_form_has_one_post_id_field():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        owner = User(username="FormOwner", email="form-owner@example.com")
+        commenter = User(username="FormCommenter", email="form-commenter@example.com")
+        owner.set_password("password123")
+        commenter.set_password("password123")
+        post = DiscussionPost(user=owner, title="Form check", content="Comments should work.")
+        db.session.add_all([owner, commenter, post])
+        db.session.commit()
+
+    client.post("/login", data={"email": "form-commenter@example.com", "password": "password123"})
+    response = client.get("/discussion")
+
+    assert response.status_code == 200
+    assert response.data.count(b'name="comment-post_id"') == 1
+
+
+def test_another_user_can_comment_on_discussion_post():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        owner = User(username="OwnerUser", email="owner-user@example.com")
+        commenter = User(username="GuestUser", email="guest-user@example.com")
+        owner.set_password("password123")
+        commenter.set_password("password123")
+        post = DiscussionPost(user=owner, title="Open strategy", content="Share feedback.")
+        db.session.add_all([owner, commenter, post])
+        db.session.commit()
+        post_id = post.id
+
+    client.post("/login", data={"email": "guest-user@example.com", "password": "password123"})
+    response = client.post(
+        "/discussion",
+        data={
+            "form_name": "add_comment",
+            "comment-post_id": str(post_id),
+            "comment-content": "This helped my colony.",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"This helped my colony." in response.data
+
+    with app.app_context():
+        saved_comment = Comment.query.filter_by(content="This helped my colony.").first()
+        assert saved_comment is not None
+        assert saved_comment.post_id == post_id
+        assert saved_comment.user.username == "GuestUser"
+
+
 def test_post_owner_can_delete_own_discussion_post_and_uploaded_image(tmp_path):
     app = create_app(TestConfig)
     app.config["UPLOAD_FOLDER"] = tmp_path
