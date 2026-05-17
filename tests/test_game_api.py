@@ -22,6 +22,52 @@ def create_logged_in_client():
     return app, client
 
 
+def test_collect_persists_to_sqlite_and_colony_state_matches():
+    app, client = create_logged_in_client()
+
+    assert client.post("/api/collect", json={"resource": "oxygen", "amount": 5}).status_code == 200
+
+    with app.app_context():
+        colony = Colony.query.first()
+        assert colony.oxygen == 55
+        assert colony.total_collected == 5
+
+    state = client.get("/api/colony-state")
+    assert state.status_code == 200
+    data = state.get_json()
+    assert data["resources"]["oxygen"] == 55
+    assert data["resources"]["total_collected"] == 5
+    assert data["upgrades"]["oxygen"] == 0
+
+    with app.app_context():
+        db.drop_all()
+
+
+def test_buy_upgrade_persists_to_sqlite_and_colony_state_matches():
+    app, client = create_logged_in_client()
+
+    with app.app_context():
+        colony = Colony.query.first()
+        colony.minerals = 200
+        db.session.commit()
+
+    assert client.post("/api/buy-upgrade", json={"upgrade_type": "oxygen"}).status_code == 200
+
+    with app.app_context():
+        colony = Colony.query.first()
+        assert colony.minerals == 80
+        assert colony.upgrades[0].level == 1
+
+    state = client.get("/api/colony-state")
+    assert state.status_code == 200
+    data = state.get_json()
+    assert data["resources"]["minerals"] == 80
+    assert data["upgrades"]["oxygen"] == 1
+
+    with app.app_context():
+        db.drop_all()
+
+
 def test_collect_increases_resource():
     app, client = create_logged_in_client()
 
