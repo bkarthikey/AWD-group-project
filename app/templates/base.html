@@ -48,6 +48,23 @@
   {% endwith %}
 
   {% block content %}{% endblock %}
-  {% block scripts %}{% endblock %}
+  {% block scripts %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      document.querySelectorAll(".password-toggle").forEach(function(toggle) {
+        var wrapper = toggle.closest(".input-with-toggle");
+        var input = wrapper ? wrapper.querySelector("input") : null;
+        if (!input) return;
+
+        toggle.addEventListener("click", function() {
+          var isHidden = input.type === "password";
+          input.type = isHidden ? "text" : "password";
+          toggle.textContent = isHidden ? "🙈" : "👁️";
+          toggle.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+        });
+      });
+    });
+  </script>
+  {% endblock %}
 </body>
 </html>
