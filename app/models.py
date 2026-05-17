@@ -34,7 +34,7 @@ class User(UserMixin, db.Model):
     )
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password_hash = generate_password_hash(password, method="pbkdf2:sha256")
 
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
@@ -44,9 +44,9 @@ class Colony(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey("user.id"), nullable=False, unique=True)
     name = db.Column(db.String(100), default="New Dawn Outpost", nullable=False)
-    oxygen = db.Column(db.Integer, default=120, nullable=False)
-    water = db.Column(db.Integer, default=90, nullable=False)
-    minerals = db.Column(db.Integer, default=180, nullable=False)
+    oxygen = db.Column(db.Integer, default=50, nullable=False)
+    water = db.Column(db.Integer, default=50, nullable=False)
+    minerals = db.Column(db.Integer, default=50, nullable=False)
     score = db.Column(db.Integer, default=0, nullable=False)
     total_collected = db.Column(db.Integer, default=0, nullable=False)
     best_combo = db.Column(db.Integer, default=1, nullable=False)

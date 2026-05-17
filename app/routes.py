@@ -150,7 +150,7 @@ def signup():
 
         user = User(username=username, email=email)
         user.set_password(form.password.data)
-        colony = Colony(user=user)
+        colony = Colony(user=user, oxygen=50, water=50, minerals=50)
         db.session.add_all([user, colony])
         db.session.commit()
         login_user(user)
@@ -616,4 +616,16 @@ def profile(username):
 @main_bp.route("/profile", methods=["GET", "POST"])
 @login_required
 def my_profile():
-    return profile(current_user.username)
+    return redirect(url_for("main.profile", username=current_user.username))
+@main_bp.post("/profile/privacy")
+@login_required
+def update_profile_privacy():
+    current_user.is_public = "is_public" in request.form
+    db.session.commit()
+
+    if current_user.is_public:
+        flash("Your colony profile is now public.", "success")
+    else:
+        flash("Your colony profile is now private.", "success")
+
+    return redirect(url_for("main.my_profile"))
