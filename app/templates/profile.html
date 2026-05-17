@@ -3,102 +3,273 @@
 {% block title %}{{ profile_user.username }} | Space Colony{% endblock %}
 
 {% block content %}
-<main class="content-shell profile-grid">
-  <section class="profile-card profile-summary">
-    <div class="profile-avatar">
-      {% if profile_user.profile_image %}
-        <img src="{{ url_for('static', filename='uploads/profiles/' ~ profile_user.profile_image) }}" alt="Profile photo">
-      {% else %}
-        <span>🧑‍🚀</span>
-      {% endif %}
-    </div>
-    <h1>{{ profile_user.username }}</h1>
-    <p class="status {% if profile_user.is_public %}public{% else %}private{% endif %}">
-      {{ "Public Colony" if profile_user.is_public else "Private Colony" }}
-    </p>
-    {% if profile_user.full_name %}
-      <p><strong>Name:</strong> {{ profile_user.full_name }}</p>
-    {% endif %}
-    <p><strong>Email:</strong> {{ profile_user.email }}</p>
-    <p><strong>Country:</strong> {{ profile_user.country or "Not provided" }}</p>
-    <p><strong>Date of birth:</strong> {{ profile_user.date_of_birth.strftime("%b %d, %Y") if profile_user.date_of_birth else "Not set" }}</p>
-    <p><strong>Leaderboard status:</strong> {% if profile_user.is_public %}Visible{% else %}Hidden{% endif %}</p>
-    {% if public_rank %}
-      <p><strong>Rank:</strong> {{ public_rank }}</p>
-    {% endif %}
-    <p><strong>Commander since:</strong> {{ profile_user.created_at.strftime("%b %d, %Y") }}</p>
-    {% if is_owner %}
-      <form class="profile-action" action="{{ url_for('main.logout') }}" method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button type="submit" class="btn secondary-btn">Logout</button>
-      </form>
-    {% endif %}
-  </section>
+<main class="content-shell profile-page">
+  <div class="profile-layout">
+    <section class="profile-card profile-identity-card">
+      <div class="profile-identity-top">
+        <div class="profile-identity-avatar" aria-hidden="true">
+          {% if profile_user.profile_image %}
+            <img src="{{ url_for('static', filename='uploads/profiles/' ~ profile_user.profile_image) }}" alt="">
+          {% else %}
+            <span class="profile-identity-avatar-fallback">🧑‍🚀</span>
+          {% endif %}
+        </div>
+        <div class="profile-identity-head">
+          <p class="eyebrow profile-identity-eyebrow">Commander dossier</p>
+          <h1 class="profile-identity-title">{{ profile_user.username }}</h1>
+          <div class="profile-identity-badges">
+            {% if profile_user.is_public %}
+              <span class="profile-pill profile-pill--public">Public on leaderboard</span>
+            {% else %}
+              <span class="profile-pill profile-pill--private">Private</span>
+            {% endif %}
+          </div>
+          <p class="profile-identity-desc">
+            {% if profile_user.is_public %}
+              Visible on the worldwide leaderboard when your colony is in the top 15.
+            {% else %}
+              Colony stats stay on your profile; you are hidden from the public leaderboard.
+            {% endif %}
+          </p>
+        </div>
+      </div>
 
-  <section class="profile-card wide">
-    <h2>Colony Overview</h2>
-    <div class="profile-stats">
-      <div><strong>{{ "{:,}".format(colony.oxygen) }}</strong><span>Oxygen</span></div>
-      <div><strong>{{ "{:,}".format(colony.water) }}</strong><span>Water</span></div>
-      <div><strong>{{ "{:,}".format(colony.minerals) }}</strong><span>Minerals</span></div>
-      <div><strong>{{ profile_stats.total_extractors }}</strong><span>Total Extractors</span></div>
-    </div>
-    <div class="profile-stats extractor-stats">
-      <div><strong>{{ profile_stats.oxygen_extractors }}</strong><span>Oxygen extractors</span></div>
-      <div><strong>{{ profile_stats.water_extractors }}</strong><span>Water extractors</span></div>
-      <div><strong>{{ profile_stats.mineral_extractors }}</strong><span>Mineral extractors</span></div>
-    </div>
-    <div class="profile-stats wide-stats">
-      <div><strong>{{ "{:,}".format(colony.score) }}</strong><span>Colony score</span></div>
-      <div><strong>{{ "{:,}".format(colony.total_collected) }}</strong><span>Total collected</span></div>
-      <div><strong>x{{ colony.best_combo }}</strong><span>Best combo</span></div>
-    </div>
-  </section>
+      <div class="profile-info-tiles" role="list">
+        {% if profile_user.full_name and is_owner %}
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Full name</span>
+          <span class="profile-tile-value">{{ profile_user.full_name }}</span>
+        </div>
+        {% endif %}
+        {% if is_owner %}
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Email</span>
+          <span class="profile-tile-value">{{ profile_user.email }}</span>
+        </div>
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Date of birth</span>
+          <span class="profile-tile-value">{{ profile_user.date_of_birth.strftime("%b %d, %Y") if profile_user.date_of_birth else "Not set" }}</span>
+        </div>
+        {% endif %}
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Country</span>
+          <span class="profile-tile-value">{{ profile_user.country or "—" }}</span>
+        </div>
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Leaderboard</span>
+          <span class="profile-tile-value">{{ "Eligible when in top 15" if profile_user.is_public else "Hidden" }}</span>
+        </div>
+        {% if profile_user.is_public and public_rank %}
+        <div class="profile-tile profile-tile--accent" role="listitem">
+          <span class="profile-tile-label">Public rank</span>
+          <span class="profile-tile-value profile-tile-value--rank">
+            {% if crown_tier %}<span class="rank-crown rank-crown--{{ crown_tier }}">👑</span>{% endif %}
+            <span>{{ rank_label }}</span>
+            {% if public_rank > 15 %}<span class="profile-rank-hint">(page shows top 15)</span>{% endif %}
+          </span>
+        </div>
+        {% elif profile_user.is_public %}
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Public rank</span>
+          <span class="profile-tile-value">Unranked</span>
+        </div>
+        {% endif %}
+        <div class="profile-tile" role="listitem">
+          <span class="profile-tile-label">Commander since</span>
+          <span class="profile-tile-value">{{ profile_user.created_at.strftime("%b %d, %Y") }}</span>
+        </div>
+      </div>
+
+      {% if is_owner %}
+      <div class="profile-identity-actions">
+        <button type="button" class="btn primary-btn profile-action-primary" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+          Edit profile &amp; account
+        </button>
+        <form class="profile-logout-form" action="{{ url_for('main.logout') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn secondary-btn profile-action-secondary">Log out</button>
+        </form>
+      </div>
+      {% endif %}
+    </section>
+
+    <section class="profile-card profile-colony-card">
+      <header class="profile-colony-header">
+        <h2>Colony · {{ colony.name }}</h2>
+        <p class="profile-colony-tagline">Resources, extractors, and scoring — each section is spaced below.</p>
+      </header>
+
+      <div class="profile-colony-stats">
+        <section class="profile-stat-group" aria-labelledby="profile-stats-resources">
+          <h3 class="profile-stat-group-title" id="profile-stats-resources">Resources</h3>
+          <p class="profile-stat-group-lead">Stored materials available to your colony right now.</p>
+          <div class="profile-stat-grid profile-stat-grid--resources">
+            <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.oxygen) }}</strong><span>Oxygen</span></div>
+            <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.water) }}</strong><span>Water</span></div>
+            <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.minerals) }}</strong><span>Minerals</span></div>
+          </div>
+        </section>
+
+        <section class="profile-stat-group" aria-labelledby="profile-stats-extractors">
+          <h3 class="profile-stat-group-title" id="profile-stats-extractors">Extractors</h3>
+          <p class="profile-stat-group-lead">Passive buildings: total owned, then each resource line.</p>
+          <div class="profile-stat-grid profile-stat-grid--extractors">
+            <div class="profile-stat-cell profile-stat-cell--highlight"><strong>{{ profile_stats.total_extractors }}</strong><span>Total extractors</span></div>
+            <div class="profile-stat-cell"><strong>{{ profile_stats.oxygen_extractors }}</strong><span>Oxygen extractors</span></div>
+            <div class="profile-stat-cell"><strong>{{ profile_stats.water_extractors }}</strong><span>Water extractors</span></div>
+            <div class="profile-stat-cell"><strong>{{ profile_stats.mineral_extractors }}</strong><span>Mineral extractors</span></div>
+          </div>
+        </section>
+
+        <section class="profile-stat-group" aria-labelledby="profile-stats-scoring">
+          <h3 class="profile-stat-group-title" id="profile-stats-scoring">Scoring</h3>
+          <p class="profile-stat-group-lead">Overall progress and harvest highlights.</p>
+          <div class="profile-stat-grid profile-stat-grid--scoring">
+            <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.score) }}</strong><span>Colony score</span></div>
+            <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.total_collected) }}</strong><span>Total collected</span></div>
+            <div class="profile-stat-cell"><strong>x{{ colony.best_combo }}</strong><span>Best combo</span></div>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
 
   {% if is_owner %}
-  <section class="profile-card wide edit-card">
-    <h2>Account Settings</h2>
-    <form method="post" enctype="multipart/form-data">
-      {{ profile_form.hidden_tag() }}
-      <input type="hidden" name="form_name" value="profile_update">
-      <div class="form-grid">
-        <label>{{ profile_form.username.label }}</label>
-        {{ profile_form.username(class="form-control") }}
-        <label>{{ profile_form.email.label }}</label>
-        {{ profile_form.email(class="form-control") }}
-        <label>{{ profile_form.full_name.label }}</label>
-        {{ profile_form.full_name(class="form-control") }}
-        <label>{{ profile_form.date_of_birth.label }}</label>
-        {{ profile_form.date_of_birth(class="form-control") }}
-        <label>{{ profile_form.country.label }}</label>
-        {{ profile_form.country(class="form-control") }}
-        <label>{{ profile_form.profile_image.label }}</label>
-        {{ profile_form.profile_image(class="form-control") }}
+  <div class="modal fade profile-edit-modal" id="editProfileModal" data-bs-theme="dark" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 class="modal-title h5" id="editProfileModalLabel">Edit profile &amp; account</h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <ul class="nav nav-tabs profile-edit-tabs" id="profileEditTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+              <button class="nav-link active" id="account-tab" data-bs-toggle="tab" data-bs-target="#account-pane" type="button" role="tab" aria-controls="account-pane" aria-selected="true">Profile &amp; visibility</button>
+            </li>
+            <li class="nav-item" role="presentation">
+              <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security-pane" type="button" role="tab" aria-controls="security-pane" aria-selected="false">Security</button>
+            </li>
+          </ul>
+          <div class="tab-content profile-edit-tab-panes" id="profileEditTabContent">
+            <div class="tab-pane fade show active" id="account-pane" role="tabpanel" aria-labelledby="account-tab" tabindex="0">
+              <form method="post" enctype="multipart/form-data" class="profile-modal-form">
+                {{ profile_form.hidden_tag() }}
+                <input type="hidden" name="form_name" value="profile_update">
+                <div class="form-grid modal-form-grid">
+                  <div>
+                    <label>{{ profile_form.username.label }}</label>
+                    {{ profile_form.username(class="form-control") }}
+                    {% for e in profile_form.username.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+                  </div>
+                  <div>
+                    <label>{{ profile_form.email.label }}</label>
+                    {{ profile_form.email(class="form-control") }}
+                    {% for e in profile_form.email.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+                  </div>
+                  <div>
+                    <label>{{ profile_form.full_name.label }}</label>
+                    {{ profile_form.full_name(class="form-control", placeholder="Optional") }}
+                  </div>
+                  <div>
+                    <label>{{ profile_form.date_of_birth.label }}</label>
+                    {{ profile_form.date_of_birth(class="form-control") }}
+                  </div>
+                  <div class="full-width-field">
+                    <label>{{ profile_form.country.label }}</label>
+                    {{ profile_form.country(class="form-control form-select") }}
+                    <p class="form-hint">Shown on the leaderboard when your profile is public and you are in the top 15.</p>
+                  </div>
+                  <div class="full-width-field">
+                    <label>{{ profile_form.profile_image.label }}</label>
+                    {{ profile_form.profile_image(class="form-control") }}
+                    <p class="form-hint">Replaces the default avatar everywhere your profile appears.</p>
+                  </div>
+                </div>
+                <label class="auth-check modal-auth-check">
+                  {{ profile_form.is_public() }}
+                  <span>Make my profile public (visible on leaderboard when in the top 15)</span>
+                </label>
+                {{ profile_form.submit(class="btn primary-btn") }}
+              </form>
+            </div>
+            <div class="tab-pane fade" id="security-pane" role="tabpanel" aria-labelledby="security-tab" tabindex="0">
+              <form method="post" class="profile-modal-form">
+                {{ password_form.hidden_tag() }}
+                <input type="hidden" name="form_name" value="password_change">
+                {% if show_password_old_error %}
+                <p class="profile-security-error" role="alert">Old password is incorrect. That is not your current password — fix it and try again, or use “Email me a temporary password” below.</p>
+                {% endif %}
+                <p class="form-hint">Enter your current password, then your new password twice.</p>
+                <div class="form-grid modal-form-grid two-column">
+                  <div>
+                    <label>{{ password_form.old_password.label }}</label>
+                    <div class="password-field">
+                      {{ password_form.old_password(class="form-control", placeholder="Current password", id="old_password_field") }}
+                      <button class="password-toggle" type="button" data-password-toggle="old_password_field" aria-label="Show password">Show</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label>{{ password_form.new_password.label }}</label>
+                    <div class="password-field">
+                      {{ password_form.new_password(class="form-control", placeholder="New password", id="new_password_field") }}
+                      <button class="password-toggle" type="button" data-password-toggle="new_password_field" aria-label="Show password">Show</button>
+                    </div>
+                  </div>
+                  <div>
+                    <label>{{ password_form.confirm_password.label }}</label>
+                    <div class="password-field">
+                      {{ password_form.confirm_password(class="form-control", placeholder="Confirm new password", id="confirm_password_field") }}
+                      <button class="password-toggle" type="button" data-password-toggle="confirm_password_field" aria-label="Show password">Show</button>
+                    </div>
+                  </div>
+                </div>
+                {% for e in password_form.old_password.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+                {% for e in password_form.new_password.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+                {% for e in password_form.confirm_password.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+                {{ password_form.submit(class="btn secondary-btn") }}
+              </form>
+              <div class="profile-forgot-panel">
+                <h3 class="h6">Forgot your password?</h3>
+                <p class="form-hint">We will email a temporary alphanumeric password to your account email. You will be signed out until you log in with it and set a new password.</p>
+                <a class="btn outline-btn" href="{{ url_for('main.forgot_password') }}">Email me a temporary password</a>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="form-row">
-        <label class="auth-check">
-          {{ profile_form.is_public() }}
-          <span>Make profile public on leaderboard</span>
-        </label>
-        {{ profile_form.submit(class="btn primary-btn") }}
-      </div>
-    </form>
-
-    <h2>Change password</h2>
-    <form method="post">
-      {{ password_form.hidden_tag() }}
-      <input type="hidden" name="form_name" value="password_change">
-      <div class="form-grid two-column">
-        <label>{{ password_form.old_password.label }}</label>
-        {{ password_form.old_password(class="form-control", placeholder="Current password") }}
-        <label>{{ password_form.new_password.label }}</label>
-        {{ password_form.new_password(class="form-control", placeholder="New password") }}
-        <label>{{ password_form.confirm_password.label }}</label>
-        {{ password_form.confirm_password(class="form-control", placeholder="Confirm new password") }}
-      </div>
-      {{ password_form.submit(class="btn secondary-btn") }}
-    </form>
-  </section>
+    </div>
+  </div>
   {% endif %}
 </main>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  {% if is_owner %}
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+  <script src="{{ url_for('static', filename='js/auth.js') }}"></script>
+  {% if open_edit_modal %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var modalEl = document.getElementById("editProfileModal");
+      if (!modalEl || typeof bootstrap === "undefined") return;
+      var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+      modal.show();
+      {% if edit_modal_tab == "security" %}
+      window.setTimeout(function() {
+        var secBtn = document.getElementById("security-tab");
+        if (secBtn && bootstrap.Tab) {
+          try {
+            bootstrap.Tab.getOrCreateInstance(secBtn).show();
+          } catch (err) {
+            new bootstrap.Tab(secBtn).show();
+          }
+        }
+      }, 10);
+      {% endif %}
+    });
+  </script>
+  {% endif %}
+  {% endif %}
 {% endblock %}
