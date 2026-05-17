@@ -72,7 +72,7 @@ def signup():
 
         user = User(username=username, email=email)
         user.set_password(form.password.data)
-        colony = Colony(user=user)
+        colony = Colony(user=user, oxygen=50, water=50, minerals=50)
         db.session.add_all([user, colony])
         db.session.commit()
         login_user(user)
