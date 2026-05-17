@@ -33,6 +33,37 @@ def test_signup_creates_user_and_colony():
         assert user.colony is not None
 
 
+def test_signup_shows_error_when_passwords_do_not_match():
+    app, client = make_client()
+
+    response = client.post(
+        "/signup",
+        data={
+            "username": "Mismatch",
+            "email": "mismatch@example.com",
+            "password": "password123",
+            "confirm_password": "different123",
+        },
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Passwords must match." in response.data
+
+    with app.app_context():
+        assert User.query.filter_by(email="mismatch@example.com").first() is None
+
+
+def test_auth_pages_render_password_visibility_controls():
+    _, client = make_client()
+
+    signup_response = client.get("/signup")
+    login_response = client.get("/login")
+
+    assert signup_response.data.count(b"data-password-toggle") == 2
+    assert login_response.data.count(b"data-password-toggle") == 1
+
+
 def test_login_allows_dashboard_access():
     app, client = make_client()
     with app.app_context():
