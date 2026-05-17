@@ -1,6 +1,9 @@
 const STORAGE_KEY = "space-colony-save-v2";
 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || "";
 const backendEnabled = Boolean(csrfToken) && window.location.protocol !== "file:";
+/** Per-user client-only HUD (milestones, achievements, frenzy). Colony numbers come from the API when Flask is on. */
+const authUserId = document.body?.dataset?.authUserId || "";
+const UI_STORAGE_KEY = `space-colony-dashboard-ui-v2-u-${authUserId || "anon"}`;
 
 const upgradeConfig = {
   click: {
@@ -119,7 +122,7 @@ const nodePositions = {
   minerals: { left: "82%", bottom: "140px" }
 };
 
-let state = loadState();
+let state = buildInitialState();
 let isCollecting = false;
 let collectTimer = null;
 let combo = 1;
@@ -127,12 +130,15 @@ let lastClickTime = 0;
 let lastMove = 0;
 let autosaveTimer = null;
 let pendingCollectRequests = 0;
+/** Avoid overlapping /api/colony-state polls (server-side passive extractor income). */
+let passivePollInFlight = false;
 
 function cloneDefaultState() {
   return JSON.parse(JSON.stringify(defaultState));
 }
 
-function loadState() {
+/** Full offline save (static prototype / file://). */
+function loadOfflineState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!saved) return cloneDefaultState();
@@ -159,8 +165,62 @@ function loadState() {
   }
 }
 
+function loadDashboardUiFromStorage() {
+  try {
+    const rawUi = localStorage.getItem(UI_STORAGE_KEY);
+    if (rawUi) return JSON.parse(rawUi);
+    const legacy = localStorage.getItem(STORAGE_KEY);
+    if (legacy) {
+      const data = JSON.parse(legacy);
+      const migrated = {
+        milestoneIndex: data.milestoneIndex ?? 0,
+        achievements: Array.isArray(data.achievements) ? data.achievements : [],
+        totalClicks: data.totalClicks ?? 0,
+        bonusMultiplier: data.bonusMultiplier ?? 1,
+        bonusUntil: data.bonusUntil ?? 0
+      };
+      localStorage.setItem(UI_STORAGE_KEY, JSON.stringify(migrated));
+      return migrated;
+    }
+  } catch (error) {
+    /* ignore */
+  }
+  return {};
+}
+
+/** When Flask serves the dashboard, colony resources/upgrades/score load from /api/colony-state only. */
+function buildInitialState() {
+  if (!backendEnabled) {
+    return loadOfflineState();
+  }
+  const base = cloneDefaultState();
+  const ui = loadDashboardUiFromStorage();
+  return {
+    ...base,
+    milestoneIndex: Number(ui.milestoneIndex) || 0,
+    achievements: Array.isArray(ui.achievements) ? ui.achievements : [],
+    totalClicks: Number(ui.totalClicks) || 0,
+    bonusMultiplier: Number(ui.bonusMultiplier) || 1,
+    bonusUntil: Number(ui.bonusUntil) || 0
+  };
+}
+
 function saveState() {
-  if (backendEnabled) return;
+  if (backendEnabled) {
+    const ui = {
+      milestoneIndex: state.milestoneIndex,
+      achievements: state.achievements,
+      totalClicks: state.totalClicks,
+      bonusMultiplier: state.bonusMultiplier,
+      bonusUntil: state.bonusUntil
+    };
+    try {
+      localStorage.setItem(UI_STORAGE_KEY, JSON.stringify(ui));
+    } catch (error) {
+      /* ignore quota / private mode */
+    }
+    return;
+  }
   state.lastSaved = Date.now();
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
@@ -192,14 +252,15 @@ function applyServerPayload(payload) {
   state.score = payload.resources.score;
   state.scoreBonus = payload.resources.score_bonus ?? 0;
   state.totalCollected = payload.resources.total_collected;
-  state.bestCombo = Math.max(state.bestCombo, payload.resources.best_combo || 1);
+  state.bestCombo = Math.max(1, Number(payload.resources.best_combo) || 1);
   state.upgrades = {
     ...state.upgrades,
     ...(payload.upgrades || {})
   };
 }
 
-async function hydrateFromServer() {
+async function hydrateFromServer(options = {}) {
+  const silent = Boolean(options.silent);
   if (!backendEnabled) return;
 
   try {
@@ -207,7 +268,9 @@ async function hydrateFromServer() {
     applyServerPayload(payload);
     updateDisplay();
   } catch (error) {
-    addEvent(`⚠️ Could not load saved colony state: ${error.message}`);
+    if (!silent) {
+      addEvent(`⚠️ Could not load saved colony state: ${error.message}`);
+    }
   }
 }
 
@@ -666,8 +729,28 @@ function moveAstronautToNode(type) {
   }, 1000);
 }
 
+function maybeMoveAstronautForPassive() {
+  if (getTotalRate() > 0 && Date.now() - lastMove > 5000) {
+    const types = Object.keys(nodePositions);
+    const randomType = types[Math.floor(Math.random() * types.length)];
+    moveAstronautToNode(randomType);
+    lastMove = Date.now();
+  }
+}
+
 function generatePassiveResources() {
-  if (backendEnabled) return;
+  if (backendEnabled) {
+    if (passivePollInFlight) return;
+    passivePollInFlight = true;
+    hydrateFromServer({ silent: true })
+      .finally(() => {
+        passivePollInFlight = false;
+      })
+      .then(() => {
+        maybeMoveAstronautForPassive();
+      });
+    return;
+  }
 
   Object.keys(upgradeConfig).forEach((type) => {
     const rate = getResourceRate(type);
@@ -679,13 +762,7 @@ function generatePassiveResources() {
   });
   recomputeScoreFromTotals();
 
-  // Move astronaut occasionally
-  if (getTotalRate() > 0 && Date.now() - lastMove > 5000) {
-    const types = Object.keys(nodePositions);
-    const randomType = types[Math.floor(Math.random() * types.length)];
-    moveAstronautToNode(randomType);
-    lastMove = Date.now();
-  }
+  maybeMoveAstronautForPassive();
 
   updateDisplay();
 }
@@ -750,15 +827,19 @@ function attachEvents() {
   }
 }
 
-attachEvents();
-updateDisplay();
-hydrateFromServer();
-rotateNews();
-scheduleCosmicBonus();
-setInterval(generatePassiveResources, 1000);
-setInterval(rotateNews, 6000);
-autosaveTimer = setInterval(saveState, 5000);
-window.addEventListener("beforeunload", () => {
-  clearInterval(autosaveTimer);
-  saveState();
-});
+(async function initDashboardGame() {
+  attachEvents();
+  if (backendEnabled) {
+    await hydrateFromServer();
+  }
+  updateDisplay();
+  rotateNews();
+  scheduleCosmicBonus();
+  setInterval(generatePassiveResources, 1000);
+  setInterval(rotateNews, 6000);
+  autosaveTimer = setInterval(saveState, 5000);
+  window.addEventListener("beforeunload", () => {
+    clearInterval(autosaveTimer);
+    saveState();
+  });
+})();

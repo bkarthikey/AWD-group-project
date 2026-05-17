@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
   <meta name="csrf-token" content="{{ csrf_token() }}">
 </head>
-<body class="{% block body_class %}inner-page{% endblock %}">
+<body class="{% block body_class %}inner-page{% endblock %}" data-auth-user-id="{{ current_user.id if current_user.is_authenticated else '' }}">
   <div class="space-bg"></div>
 
   {% block nav %}
