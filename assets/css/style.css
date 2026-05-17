@@ -575,6 +575,132 @@ a {
   transition: width 0.35s ease;
 }
 
+/* Colony directives (server missions + offline milestone) */
+.mission-board-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 6px;
+}
+
+.mission-board-head h3 {
+  margin: 0;
+}
+
+.mission-pill {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(93, 228, 255, 0.35);
+  background: linear-gradient(135deg, rgba(93, 228, 255, 0.15), rgba(140, 120, 255, 0.12));
+  color: #b8f4ff;
+}
+
+.mission-board-lead {
+  margin: 0 0 12px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.directive-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.directive-card {
+  padding: 12px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: linear-gradient(155deg, rgba(12, 22, 44, 0.65), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+}
+
+.directive-card--oxygen {
+  border-color: rgba(93, 228, 255, 0.28);
+  box-shadow: 0 0 0 1px rgba(93, 228, 255, 0.06), 0 10px 32px rgba(0, 0, 0, 0.25);
+}
+
+.directive-card--water {
+  border-color: rgba(120, 170, 255, 0.35);
+  box-shadow: 0 0 0 1px rgba(120, 170, 255, 0.07), 0 10px 32px rgba(0, 0, 0, 0.25);
+}
+
+.directive-card--minerals {
+  border-color: rgba(255, 200, 120, 0.3);
+  box-shadow: 0 0 0 1px rgba(255, 200, 120, 0.06), 0 10px 32px rgba(0, 0, 0, 0.25);
+}
+
+.directive-card--offline {
+  border-color: rgba(109, 255, 177, 0.28);
+}
+
+.directive-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.directive-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #9ecbff;
+}
+
+.directive-reward {
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ffe6a8;
+}
+
+.directive-title {
+  margin: 0 0 4px;
+  font-size: 0.98rem;
+  font-weight: 700;
+  color: #eaf2ff;
+  line-height: 1.35;
+}
+
+.directive-sub {
+  margin: 0 0 10px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  line-height: 1.4;
+}
+
+.directive-track {
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.directive-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #5de4ff, #8c78ff, #ffb45d);
+  transition: width 0.4s ease;
+}
+
+.directive-foot {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+
 .compact-stats p {
   display: flex;
   justify-content: space-between;

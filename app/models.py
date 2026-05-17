@@ -52,6 +52,7 @@ class Colony(db.Model):
     total_collected = db.Column(db.Integer, default=0, nullable=False)
     best_combo = db.Column(db.Integer, default=1, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
+    missions_json = db.Column(db.Text, nullable=False, default="{}", server_default="{}")
     updated_at = db.Column(
         db.DateTime,
         default=lambda: datetime.now(timezone.utc),
