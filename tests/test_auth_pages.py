@@ -82,6 +82,54 @@ def test_login_allows_dashboard_access():
     assert b"Colony Status" in response.data
 
 
+def test_forgot_password_does_not_change_password_when_email_cannot_send():
+    app, client = make_client()
+    with app.app_context():
+        user = User(username="NoMail", email="nomail@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+
+    response = client.post(
+        "/forgot-password",
+        data={"email": "nomail@example.com"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Your password has not been changed." in response.data
+
+    with app.app_context():
+        user = User.query.filter_by(email="nomail@example.com").first()
+        assert user.check_password("password123")
+
+
+def test_forgot_password_changes_password_after_successful_email(monkeypatch):
+    app, client = make_client()
+    with app.app_context():
+        user = User(username="MailOk", email="mailok@example.com")
+        user.set_password("password123")
+        db.session.add(user)
+        db.session.commit()
+
+    monkeypatch.setattr("app.routes.generate_temporary_password", lambda: "TempPass123")
+    monkeypatch.setattr("app.routes.send_temporary_password_email", lambda user, password: True)
+
+    response = client.post(
+        "/forgot-password",
+        data={"email": "mailok@example.com"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"A temporary password has been sent to your email." in response.data
+
+    with app.app_context():
+        user = User.query.filter_by(email="mailok@example.com").first()
+        assert not user.check_password("password123")
+        assert user.check_password("TempPass123")
+
+
 def test_dashboard_requires_login():
     app, client = make_client()
 
