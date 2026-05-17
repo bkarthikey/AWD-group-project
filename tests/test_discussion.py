@@ -20,6 +20,41 @@ def test_discussion_page_loads():
     assert b"Reward exchange" in response.data
 
 
+def test_discussion_open_exchange_panel_hides_completed_exchanges():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    with app.app_context():
+        db.create_all()
+        sender = User(username="Nova", email="nova@example.com")
+        receiver = User(username="Kai", email="kai@example.com")
+        sender.set_password("password123")
+        receiver.set_password("password123")
+        db.session.add_all([sender, receiver])
+        db.session.flush()
+        db.session.add_all([
+            RewardExchange(
+                sender=sender,
+                resource_type="oxygen",
+                amount=25,
+                status="open",
+            ),
+            RewardExchange(
+                sender=sender,
+                receiver=receiver,
+                resource_type="water",
+                amount=15,
+                status="completed",
+            ),
+        ])
+        db.session.commit()
+
+    response = client.get("/discussion")
+
+    assert response.status_code == 200
+    assert b"25 oxygen" in response.data
+    assert b"15 water" not in response.data
+
+
 def test_discussion_models_store_post_comment_and_exchange():
     app = create_app(TestConfig)
 

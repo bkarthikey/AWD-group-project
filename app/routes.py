@@ -494,6 +494,7 @@ def discussion():
 
     exchange_offers = (
         RewardExchange.query
+        .filter_by(status="open")
         .order_by(RewardExchange.created_at.desc())
         .limit(10)
         .all()
