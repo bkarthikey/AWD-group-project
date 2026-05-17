@@ -10,7 +10,9 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     WTF_CSRF_ENABLED = True
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, "assets", "uploads", "discussion")
+    UPLOAD_FOLDER = os.path.join(BASE_DIR, "assets", "uploads")
+    DISCUSSION_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, "discussion")
+    PROFILE_UPLOAD_FOLDER = os.path.join(UPLOAD_FOLDER, "profiles")
 
 
 class TestConfig(Config):
