@@ -1,3 +1,17 @@
+"""
+End-to-end browser tests against a live in-process Flask server.
+
+Requires a local browser + matching WebDriver. Selenium 4.6+ bundles Selenium
+Manager, which resolves Chrome / Edge / Firefox drivers automatically when the
+browser is installed.
+
+Optional: set SELENIUM_BROWSER to one of chrome, edge, firefox, safari to use
+only that driver (otherwise the first working driver in the default order is
+used: chrome, edge, firefox, safari).
+"""
+
+import os
+import secrets
 import socket
 import threading
 import time
@@ -53,14 +67,52 @@ def live_server():
     server.shutdown()
 
 
+def _webdriver_factories():
+    """Return ordered (label, callable) pairs for WebDriver startup."""
+    pref = (os.environ.get("SELENIUM_BROWSER") or "").strip().lower()
+    all_factories = [
+        ("chrome", webdriver.Chrome),
+        ("edge", webdriver.Edge),
+        ("firefox", webdriver.Firefox),
+        ("safari", webdriver.Safari),
+    ]
+    if pref:
+        by_label = dict(all_factories)
+        if pref not in by_label:
+            pytest.skip(
+                f"Unknown SELENIUM_BROWSER={pref!r}. Use one of: "
+                f"{', '.join(by_label)}."
+            )
+        return [(pref, by_label[pref])]
+    return all_factories
+
+
 @pytest.fixture(scope="module")
 def browser():
-    try:
-        driver = webdriver.Safari()
-    except (PermissionError, WebDriverException) as exc:
-        pytest.skip(f"Safari WebDriver is not available or not enabled: {exc}")
+    errors = []
+    driver = None
+
+    for label, factory in _webdriver_factories():
+        try:
+            driver = factory()
+            break
+        except (WebDriverException, PermissionError, OSError) as exc:
+            msg = str(exc).strip() or repr(exc)
+            if len(msg) > 240:
+                msg = msg[:237] + "..."
+            errors.append(f"{label}: {msg}")
+
+    if driver is None:
+        tried = ", ".join(label for label, _ in _webdriver_factories())
+        pytest.skip(
+            "No WebDriver could be started (tried: "
+            f"{tried}). Install Chrome, Edge, or Firefox, or on macOS run "
+            "`safaridriver --enable` for Safari. Optional: set SELENIUM_BROWSER "
+            f"to force one browser. Errors: {' | '.join(errors)}"
+        )
 
     driver.set_window_size(1280, 900)
+    driver.implicitly_wait(0)
     yield driver
     driver.quit()
 
@@ -88,13 +140,23 @@ def test_login_page_loads(browser, live_server):
     assert browser.find_element(By.NAME, "password")
 
 
+def _random_signup_credentials():
+    """Unique commander + email + password per run (RegisterForm: username ≥3, password ≥8)."""
+    token = secrets.token_hex(5)
+    username = f"cmd{token}"
+    email = f"selenium.{token}@example.com"
+    password = secrets.token_urlsafe(16)
+    return username, email, password
+
+
 def test_user_can_signup_and_reach_dashboard(browser, live_server):
     browser.get(f"{live_server}/signup")
 
-    browser.find_element(By.NAME, "username").send_keys("SeleniumNova")
-    browser.find_element(By.NAME, "email").send_keys("selenium@example.com")
-    browser.find_element(By.NAME, "password").send_keys("password123")
-    browser.find_element(By.NAME, "confirm_password").send_keys("password123")
+    username, email, password = _random_signup_credentials()
+    browser.find_element(By.NAME, "username").send_keys(username)
+    browser.find_element(By.NAME, "email").send_keys(email)
+    browser.find_element(By.NAME, "password").send_keys(password)
+    browser.find_element(By.NAME, "confirm_password").send_keys(password)
     browser.find_element(By.CSS_SELECTOR, "button[type='submit'], input[type='submit']").click()
 
     WebDriverWait(browser, 5).until(EC.url_contains("/dashboard"))

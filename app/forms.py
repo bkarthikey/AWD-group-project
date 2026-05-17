@@ -49,7 +49,7 @@ class ProfileForm(FlaskForm):
         "Profile photo",
         validators=[FileAllowed(["png", "jpg", "jpeg", "gif", "webp"], "Images only.")],
     )
-    is_public = BooleanField("Make my profile public and visible on leaderboard")
+    is_public = BooleanField("Public profile (leaderboard when in top 15)")
     submit = SubmitField("Save profile")
 
     def __init__(self, *args, **kwargs):

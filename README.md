@@ -49,19 +49,28 @@ Run only the backend/unit tests:
 python -m pytest -q tests/test_models.py tests/test_game_api.py tests/test_auth_pages.py tests/test_discussion.py
 ```
 
-Run Selenium browser tests:
+Run Selenium browser tests (live Flask server in-process + real browser):
 
 ```bash
 python -m pytest -q tests/test_selenium.py
 ```
 
-On macOS, enable Safari WebDriver before running Selenium tests:
+The tests try **Chrome**, then **Edge**, then **Firefox**, then **Safari** (Selenium Manager supplies matching drivers when the browser is installed). On Windows or Linux, install one of Chrome, Edge, or Firefox so at least one driver can start.
+
+To force a specific browser:
+
+```bash
+set SELENIUM_BROWSER=chrome
+python -m pytest -q tests/test_selenium.py
+```
+
+(On PowerShell use `$env:SELENIUM_BROWSER="chrome"` before the same pytest command.)
+
+On macOS, if you rely on Safari only, enable its driver first:
 
 ```bash
 safaridriver --enable
 ```
-
-The Selenium tests run a live Flask test server and then drive a real browser through the main user flows.
 
 ## Database migrations
 
