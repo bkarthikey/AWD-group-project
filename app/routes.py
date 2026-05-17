@@ -445,3 +445,7 @@ def update_profile_privacy():
         flash("Your colony profile is now private.", "success")
 
     return redirect(url_for("main.my_profile"))
+@main_bp.route("/settings")
+@login_required
+def settings():
+    return render_template("settings.html")
