@@ -532,20 +532,19 @@ def forgot_password():
             return redirect(url_for("main.login"))
 
         temp_password = generate_temporary_password()
-        user.set_password(temp_password)
-        db.session.commit()
-
         if send_temporary_password_email(user, temp_password):
+            user.set_password(temp_password)
+            db.session.commit()
             flash("A temporary password has been sent to your email. Please sign in again.", "success")
+            if current_user.is_authenticated:
+                logout_user()
         else:
             flash(
-                "Email server is not configured. A temporary password has been generated and stored. "
-                "Please contact support if you do not receive it.",
+                "Email server is not configured. Your password has not been changed. "
+                "Please contact support if you still need help signing in.",
                 "warning",
             )
 
-        if current_user.is_authenticated:
-            logout_user()
         return redirect(url_for("main.login"))
 
     return render_template("forgot_password.html", form=form)
