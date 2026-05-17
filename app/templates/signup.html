@@ -8,7 +8,7 @@
 <main class="auth-shell">
   <form class="auth-card" method="post" action="{{ url_for('main.signup') }}">
     {{ form.hidden_tag() }}
-    <a href="{{ url_for('main.index') }}" class="brand auth-brand">🚀 <span>Space Colony</span></a>
+    <a href="{{ url_for('main.index') }}" class="brand auth-brand"><span class="brand-mark" aria-hidden="true">🚀</span> <span class="brand-title-accent">Space Colony</span></a>
     <h1>Create colony</h1>
     <p>Start your survival mission on Kepler-77X.</p>
 
