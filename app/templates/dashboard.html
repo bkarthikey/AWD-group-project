@@ -7,6 +7,30 @@
 <main class="game-layout">
   <aside class="hud-panel left-hud">
     <h2>Colony Status</h2>
+
+    <div class="mission-card rank-card rank-card--first">
+      <h3>Leaderboard rank</h3>
+      <p class="rank-display rank-crown-row">
+        {% if crown_tier %}
+          <span class="rank-crown rank-crown--{{ crown_tier }}" title="Top 3">👑</span>
+        {% endif %}
+        <span class="rank-text">{{ rank_label }}</span>
+      </p>
+      <p class="rank-note">
+        {% if not colony.user.is_public %}
+          Your profile is private. You still see your rank here, but you will not appear on the public leaderboard.
+        {% elif public_rank %}
+          {% if public_rank > 15 %}
+            You are <strong>#{{ public_rank }}</strong> among public commanders. The leaderboard page shows the top 15 only.
+          {% else %}
+            You are in the <strong>top 15</strong> and visible on the leaderboard.
+          {% endif %}
+        {% else %}
+          Play with a public profile to earn a worldwide rank.
+        {% endif %}
+      </p>
+    </div>
+
     <div class="news-ticker" id="newsTicker">Colony news: command center waiting for your next harvest.</div>
 
     <div class="stat-row">
@@ -39,29 +63,6 @@
       <p>Harvest power <strong id="clickPowerCount">1</strong></p>
       <p>Colony score <strong id="scoreCount">{{ colony.score }}</strong></p>
       <p>Resources per second <strong id="rateCount">0</strong></p>
-    </div>
-
-    <div class="mission-card rank-card">
-      <h3>Leaderboard rank</h3>
-      <p class="rank-display rank-crown-row">
-        {% if crown_tier %}
-          <span class="rank-crown rank-crown--{{ crown_tier }}" title="Top 3">👑</span>
-        {% endif %}
-        <span class="rank-text">{{ rank_label }}</span>
-      </p>
-      <p class="rank-note">
-        {% if not colony.user.is_public %}
-          Your profile is private. You still see your rank here, but you will not appear on the public leaderboard.
-        {% elif public_rank %}
-          {% if public_rank > 15 %}
-            You are <strong>#{{ public_rank }}</strong> among public commanders. The leaderboard page shows the top 15 only.
-          {% else %}
-            You are in the <strong>top 15</strong> and visible on the leaderboard.
-          {% endif %}
-        {% else %}
-          Play with a public profile to earn a worldwide rank.
-        {% endif %}
-      </p>
     </div>
 
     <div class="mission-card achievements-card">

@@ -48,6 +48,7 @@ class Colony(db.Model):
     water = db.Column(db.Integer, default=50, nullable=False)
     minerals = db.Column(db.Integer, default=50, nullable=False)
     score = db.Column(db.Integer, default=0, nullable=False)
+    score_bonus = db.Column(db.Integer, default=0, nullable=False)
     total_collected = db.Column(db.Integer, default=0, nullable=False)
     best_combo = db.Column(db.Integer, default=1, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), nullable=False)
@@ -68,6 +69,7 @@ class Colony(db.Model):
             "water": self.water,
             "minerals": self.minerals,
             "score": self.score,
+            "score_bonus": self.score_bonus,
             "total_collected": self.total_collected,
             "best_combo": self.best_combo,
         }
