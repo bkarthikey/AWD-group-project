@@ -112,5 +112,5 @@ def test_discussion_board_page_loads(browser, live_server):
 def test_leaderboard_page_loads(browser, live_server):
     browser.get(f"{live_server}/leaderboard")
 
-    assert "Top 10 Colonies" in browser.page_source
+    assert "Top 15 Colonies" in browser.page_source
     assert "Leaderboard" in browser.title
