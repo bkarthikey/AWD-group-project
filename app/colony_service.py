@@ -5,14 +5,21 @@ from .models import Colony, Upgrade, User
 
 
 UPGRADES = {
-    "oxygen": {"cost_resource": "minerals", "base_cost": 50, "rate": 1.2},
-    "water": {"cost_resource": "oxygen", "base_cost": 40, "rate": 1.0},
-    "minerals": {"cost_resource": "water", "base_cost": 60, "rate": 1.4},
+    "oxygen": {"cost_resource": "minerals", "base_cost": 120, "cost_growth": 2.0, "base_rate": 2.0},
+    "water": {"cost_resource": "oxygen", "base_cost": 120, "cost_growth": 2.0, "base_rate": 2.0},
+    "minerals": {"cost_resource": "water", "base_cost": 120, "cost_growth": 2.0, "base_rate": 2.0},
+    "click": {"cost_resource": "mixed", "base_cost": 60, "cost_growth": 2.0, "base_rate": 0},
 }
 
 
 def get_upgrade_cost(upgrade_type, level):
-    return int(UPGRADES[upgrade_type]["base_cost"] * (1.55 ** level))
+    return int(UPGRADES[upgrade_type]["base_cost"] * (UPGRADES[upgrade_type]["cost_growth"] ** level))
+
+
+def get_resource_rate(upgrade_type, level):
+    if level <= 0:
+        return 0
+    return UPGRADES[upgrade_type]["base_rate"] + 0.6 * max(0, level - 1)
 
 
 def get_or_create_upgrade(colony, upgrade_type):
@@ -46,7 +53,11 @@ def apply_passive_income(colony, now=None):
     total_earned = 0
 
     for upgrade_type, config in UPGRADES.items():
-        earned = int(upgrades[upgrade_type] * config["rate"] * elapsed_seconds)
+        if upgrade_type == "click":
+            continue
+
+        rate = get_resource_rate(upgrade_type, upgrades[upgrade_type])
+        earned = int(upgrades[upgrade_type] * rate * elapsed_seconds)
         if earned <= 0:
             continue
 
@@ -65,8 +76,8 @@ def colony_payload(colony):
         "resources": colony.resource_dict(),
         "upgrades": upgrades,
         "rates": {
-            upgrade_type: round(upgrades[upgrade_type] * config["rate"], 1)
-            for upgrade_type, config in UPGRADES.items()
+            upgrade_type: round(upgrades[upgrade_type] * get_resource_rate(upgrade_type, upgrades[upgrade_type]), 1)
+            for upgrade_type in UPGRADES
         },
     }
 

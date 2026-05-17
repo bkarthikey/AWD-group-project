@@ -3,28 +3,40 @@ const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || 
 const backendEnabled = Boolean(csrfToken) && window.location.protocol !== "file:";
 
 const upgradeConfig = {
+  click: {
+    label: "Harvest Enhancer",
+    resourceLabel: "click power",
+    paysWith: "mixed",
+    baseCost: 60,
+    costGrowth: 2.0,
+    baseRate: 0,
+    icon: "🦾"
+  },
   oxygen: {
     label: "Oxygen Extractor",
     resourceLabel: "oxygen",
     paysWith: "minerals",
-    baseCost: 50,
-    baseRate: 1.2,
+    baseCost: 120,
+    costGrowth: 2.0,
+    baseRate: 2.0,
     icon: "💨"
   },
   water: {
     label: "Water Extractor",
     resourceLabel: "water",
     paysWith: "oxygen",
-    baseCost: 40,
-    baseRate: 1,
+    baseCost: 120,
+    costGrowth: 2.0,
+    baseRate: 2.0,
     icon: "💧"
   },
   minerals: {
     label: "Mining Drill",
     resourceLabel: "minerals",
     paysWith: "water",
-    baseCost: 60,
-    baseRate: 1.4,
+    baseCost: 120,
+    costGrowth: 2.0,
+    baseRate: 2.0,
     icon: "💎"
   }
 };
@@ -57,14 +69,15 @@ const newsPool = [
 
 const defaultState = {
   resources: {
-    oxygen: 120,
-    water: 90,
-    minerals: 180
+    oxygen: 50,
+    water: 50,
+    minerals: 50
   },
   upgrades: {
     oxygen: 0,
     water: 0,
-    minerals: 0
+    minerals: 0,
+    click: 0
   },
   totalCollected: 0,
   totalClicks: 0,
@@ -211,31 +224,45 @@ async function syncCollection(resource, amount, bestCombo, comboValue, criticalH
 }
 
 function formatNumber(value) {
-  return Math.floor(value).toLocaleString();
+  const numeric = Number(value);
+  if (Number.isNaN(numeric)) return "0";
+  const rounded = Number(numeric.toFixed(1));
+  if (Number.isInteger(rounded)) {
+    return rounded.toLocaleString();
+  }
+  return rounded.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 function getUpgradeCost(type) {
   const config = upgradeConfig[type];
-  return Math.floor(config.baseCost * Math.pow(1.55, state.upgrades[type]));
+  return Math.floor(config.baseCost * Math.pow(config.costGrowth, state.upgrades[type]));
 }
 
 function getResourceRate(type, save = state) {
+  if (type === "click") return 0;
   const config = upgradeConfig[type];
-  return save.upgrades[type] * config.baseRate;
+  const level = save.upgrades[type];
+  if (level <= 0) return 0;
+  return config.baseRate + 0.6 * Math.max(0, level - 1);
 }
 
 function getTotalRate(save = state) {
-  return Object.keys(upgradeConfig).reduce((total, type) => total + getResourceRate(type, save), 0);
+  return Object.keys(upgradeConfig).reduce((total, type) => {
+    if (type === "click") return total;
+    return total + getResourceRate(type, save);
+  }, 0);
 }
 
 function getTotalOwned(save = state) {
-  return Object.values(save.upgrades).reduce((total, value) => total + value, 0);
+  return (save.upgrades.oxygen || 0) + (save.upgrades.water || 0) + (save.upgrades.minerals || 0);
 }
 
 function getClickPower() {
+  const clickLevel = state.upgrades.click || 0;
+  const clickBonus = Math.floor(clickLevel / 2) * 0.5 + (clickLevel % 2 === 1 ? 0.2 : 0);
   const buildingBonus = Math.floor(getTotalOwned() / 3);
   const achievementBonus = Math.floor(state.achievements.length / 2);
-  return 1 + buildingBonus + achievementBonus;
+  return 1 + clickBonus + buildingBonus + achievementBonus;
 }
 
 function getActiveMultiplier() {
@@ -339,23 +366,39 @@ function updateUpgradeButtons() {
     const config = upgradeConfig[type];
     const level = state.upgrades[type];
     const cost = getUpgradeCost(type);
-    const canBuy = state.resources[config.paysWith] >= cost;
     const buttons = document.querySelectorAll(`[data-upgrade="${type}"]`);
     const dashboardLevel = document.getElementById(`${type}Level`);
     const dashboardRate = document.getElementById(`${type}RateText`);
     const pageLevel = document.getElementById(`${type}UpgradeLevel`);
     const pageRate = document.getElementById(`${type}UpgradeRate`);
+    let canBuy = false;
+
+    if (config.paysWith === "mixed") {
+      const perResource = Math.floor(cost / 3);
+      canBuy = state.resources.oxygen >= perResource && state.resources.water >= perResource && state.resources.minerals >= perResource;
+    } else {
+      canBuy = state.resources[config.paysWith] >= cost;
+    }
 
     buttons.forEach((button) => {
-      button.textContent = `Buy ${level + 1}: ${formatNumber(cost)} ${config.paysWith}`;
+      if (config.paysWith === "mixed") {
+        const perResource = Math.floor(cost / 3);
+        button.textContent = `Buy ${level + 1}: ${formatNumber(perResource)} each`;
+      } else {
+        button.textContent = `Buy ${level + 1}: ${formatNumber(cost)} ${config.paysWith}`;
+      }
       button.disabled = !canBuy;
       button.classList.toggle("ready", canBuy);
     });
 
     if (dashboardLevel) dashboardLevel.textContent = `Owned ${level}`;
-    if (dashboardRate) dashboardRate.textContent = `+${getResourceRate(type).toFixed(1)} / sec`;
+    if (dashboardRate) {
+      dashboardRate.textContent = type === "click" ? `+${getClickPower().toFixed(1)} / click` : `+${getResourceRate(type).toFixed(1)} / sec`;
+    }
     if (pageLevel) pageLevel.textContent = `Level ${level}`;
-    if (pageRate) pageRate.textContent = `+${getResourceRate(type).toFixed(1)} ${config.resourceLabel} / sec`;
+    if (pageRate) {
+      pageRate.textContent = type === "click" ? `+${getClickPower().toFixed(1)} per click` : `+${getResourceRate(type).toFixed(1)} ${config.resourceLabel} / sec`;
+    }
   });
 }
 
@@ -398,7 +441,8 @@ function collectResource(event) {
   const critical = Math.random() < Math.min(0.08 + combo * 0.006, 0.22);
   const multiplier = getActiveMultiplier();
   const baseAmount = getClickPower() + Math.floor(combo / 8);
-  const amount = Math.floor((critical ? baseAmount + 2 + Math.floor(combo / 6) : baseAmount) * multiplier);
+  const targetAmount = (critical ? baseAmount + 2 + Math.floor(combo / 6) : baseAmount) * multiplier;
+  const amount = resolveClickAmount(targetAmount);
   const scoreGain = amount * combo * (critical ? 4 : 2);
 
   state.resources[gained] += amount;
@@ -407,10 +451,16 @@ function collectResource(event) {
   state.score += scoreGain;
   state.bestCombo = Math.max(state.bestCombo, combo);
 
-  showGain(`+${amount} ${gained}${critical ? "!" : ""}`, gained, event);
+  showGain(`+${formatNumber(amount)} ${gained}${critical ? "!" : ""}`, gained, event);
   showCombo();
   updateDisplay();
   syncCollection(gained, amount, state.bestCombo, combo, critical);
+}
+
+function resolveClickAmount(power) {
+  const base = Math.floor(power);
+  const remainder = power - base;
+  return base + (Math.random() < remainder ? 1 : 0);
 }
 
 function showGain(text, type, event) {
@@ -529,12 +579,23 @@ function buyUpgrade(type) {
   const config = upgradeConfig[type];
   const cost = getUpgradeCost(type);
 
-  if (state.resources[config.paysWith] < cost) {
-    addEvent(`⛔ Need ${formatNumber(cost)} ${config.paysWith} for ${config.label}.`);
-    return;
+  if (config.paysWith === "mixed") {
+    const perResource = Math.floor(cost / 3);
+    if (state.resources.oxygen < perResource || state.resources.water < perResource || state.resources.minerals < perResource) {
+      addEvent(`⛔ Need ${formatNumber(perResource)} of each resource to upgrade ${config.label}.`);
+      return;
+    }
+    state.resources.oxygen -= perResource;
+    state.resources.water -= perResource;
+    state.resources.minerals -= perResource;
+  } else {
+    if (state.resources[config.paysWith] < cost) {
+      addEvent(`⛔ Need ${formatNumber(cost)} ${config.paysWith} for ${config.label}.`);
+      return;
+    }
+    state.resources[config.paysWith] -= cost;
   }
 
-  state.resources[config.paysWith] -= cost;
   state.upgrades[type] += 1;
   state.score += cost * 3;
   addEvent(`${config.icon} ${config.label} upgraded to level ${state.upgrades[type]}.`);
