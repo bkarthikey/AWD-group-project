@@ -16,7 +16,10 @@
     {{ form.email(class="form-control", placeholder="commander@example.com") }}
 
     {{ form.password.label }}
-    {{ form.password(class="form-control", placeholder="Enter your password") }}
+    <div class="password-field">
+      {{ form.password(class="form-control", placeholder="Enter your password") }}
+      <button class="password-toggle" type="button" data-password-toggle="{{ form.password.id }}" aria-label="Show password">Show</button>
+    </div>
 
     <label class="auth-check">
       {{ form.remember() }}
@@ -27,4 +30,8 @@
     <p class="auth-switch">New commander? <a href="{{ url_for('main.signup') }}">Create account</a></p>
   </form>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 {% endblock %}
