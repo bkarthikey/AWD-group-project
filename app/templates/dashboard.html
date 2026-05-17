@@ -18,15 +18,15 @@
       </p>
       <p class="rank-note">
         {% if not colony.user.is_public %}
-          Your profile is private. You still see your rank here, but you will not appear on the public leaderboard.
+          Private profile — not listed on the public leaderboard.
         {% elif public_rank %}
           {% if public_rank > 15 %}
-            You are <strong>#{{ public_rank }}</strong> among public commanders. The leaderboard page shows the top 15 only.
+            <strong>#{{ public_rank }}</strong> among public commanders (leaderboard lists top 15).
           {% else %}
-            You are in the <strong>top 15</strong> and visible on the leaderboard.
+            Listed on the public leaderboard.
           {% endif %}
         {% else %}
-          Play with a public profile to earn a worldwide rank.
+          Set profile to public to appear on the leaderboard.
         {% endif %}
       </p>
     </div>

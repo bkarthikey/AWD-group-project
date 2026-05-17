@@ -140,7 +140,7 @@ def get_public_rank(colony):
 
 
 def format_rank_label(rank):
-    """Human-readable rank text (crowns rendered in templates)."""
+    """Human-readable rank label for display."""
     if rank is None:
         return "Unranked"
     if rank == 1:

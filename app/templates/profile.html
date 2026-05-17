@@ -15,20 +15,20 @@
           {% endif %}
         </div>
         <div class="profile-identity-head">
-          <p class="eyebrow profile-identity-eyebrow">Commander dossier</p>
+          <p class="eyebrow profile-identity-eyebrow">Commander</p>
           <h1 class="profile-identity-title">{{ profile_user.username }}</h1>
           <div class="profile-identity-badges">
             {% if profile_user.is_public %}
-              <span class="profile-pill profile-pill--public">Public on leaderboard</span>
+              <span class="profile-pill profile-pill--public">Public</span>
             {% else %}
               <span class="profile-pill profile-pill--private">Private</span>
             {% endif %}
           </div>
           <p class="profile-identity-desc">
             {% if profile_user.is_public %}
-              Visible on the worldwide leaderboard when your colony is in the top 15.
+              Public — eligible for the top-15 leaderboard.
             {% else %}
-              Colony stats stay on your profile; you are hidden from the public leaderboard.
+              Private — colony stats stay here only.
             {% endif %}
           </p>
         </div>
@@ -57,7 +57,7 @@
         </div>
         <div class="profile-tile" role="listitem">
           <span class="profile-tile-label">Leaderboard</span>
-          <span class="profile-tile-value">{{ "Eligible when in top 15" if profile_user.is_public else "Hidden" }}</span>
+          <span class="profile-tile-value">{{ "Top 15 when ranked" if profile_user.is_public else "Not listed" }}</span>
         </div>
         {% if profile_user.is_public and public_rank %}
         <div class="profile-tile profile-tile--accent" role="listitem">
@@ -65,7 +65,6 @@
           <span class="profile-tile-value profile-tile-value--rank">
             {% if crown_tier %}<span class="rank-crown rank-crown--{{ crown_tier }}">👑</span>{% endif %}
             <span>{{ rank_label }}</span>
-            {% if public_rank > 15 %}<span class="profile-rank-hint">(page shows top 15)</span>{% endif %}
           </span>
         </div>
         {% elif profile_user.is_public %}
@@ -96,13 +95,11 @@
     <section class="profile-card profile-colony-card">
       <header class="profile-colony-header">
         <h2>Colony · {{ colony.name }}</h2>
-        <p class="profile-colony-tagline">Resources, extractors, and scoring — each section is spaced below.</p>
       </header>
 
       <div class="profile-colony-stats">
         <section class="profile-stat-group" aria-labelledby="profile-stats-resources">
           <h3 class="profile-stat-group-title" id="profile-stats-resources">Resources</h3>
-          <p class="profile-stat-group-lead">Stored materials available to your colony right now.</p>
           <div class="profile-stat-grid profile-stat-grid--resources">
             <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.oxygen) }}</strong><span>Oxygen</span></div>
             <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.water) }}</strong><span>Water</span></div>
@@ -112,7 +109,6 @@
 
         <section class="profile-stat-group" aria-labelledby="profile-stats-extractors">
           <h3 class="profile-stat-group-title" id="profile-stats-extractors">Extractors</h3>
-          <p class="profile-stat-group-lead">Passive buildings: total owned, then each resource line.</p>
           <div class="profile-stat-grid profile-stat-grid--extractors">
             <div class="profile-stat-cell profile-stat-cell--highlight"><strong>{{ profile_stats.total_extractors }}</strong><span>Total extractors</span></div>
             <div class="profile-stat-cell"><strong>{{ profile_stats.oxygen_extractors }}</strong><span>Oxygen extractors</span></div>
@@ -123,7 +119,6 @@
 
         <section class="profile-stat-group" aria-labelledby="profile-stats-scoring">
           <h3 class="profile-stat-group-title" id="profile-stats-scoring">Scoring</h3>
-          <p class="profile-stat-group-lead">Overall progress and harvest highlights.</p>
           <div class="profile-stat-grid profile-stat-grid--scoring">
             <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.score) }}</strong><span>Colony score</span></div>
             <div class="profile-stat-cell"><strong>{{ "{:,}".format(colony.total_collected) }}</strong><span>Total collected</span></div>
@@ -178,17 +173,17 @@
                   <div class="full-width-field">
                     <label>{{ profile_form.country.label }}</label>
                     {{ profile_form.country(class="form-control form-select") }}
-                    <p class="form-hint">Shown on the leaderboard when your profile is public and you are in the top 15.</p>
+                    <p class="form-hint">Used on the leaderboard when your profile is public.</p>
                   </div>
                   <div class="full-width-field">
                     <label>{{ profile_form.profile_image.label }}</label>
                     {{ profile_form.profile_image(class="form-control") }}
-                    <p class="form-hint">Replaces the default avatar everywhere your profile appears.</p>
+                    <p class="form-hint">Optional. Replaces the default avatar.</p>
                   </div>
                 </div>
                 <label class="auth-check modal-auth-check">
                   {{ profile_form.is_public() }}
-                  <span>Make my profile public (visible on leaderboard when in the top 15)</span>
+                  <span>Public profile (leaderboard when ranked in top 15)</span>
                 </label>
                 {{ profile_form.submit(class="btn primary-btn") }}
               </form>
@@ -198,9 +193,9 @@
                 {{ password_form.hidden_tag() }}
                 <input type="hidden" name="form_name" value="password_change">
                 {% if show_password_old_error %}
-                <p class="profile-security-error" role="alert">Old password is incorrect. That is not your current password — fix it and try again, or use “Email me a temporary password” below.</p>
+                <p class="profile-security-error" role="alert">Current password is incorrect. Try again or use the reset link below.</p>
                 {% endif %}
-                <p class="form-hint">Enter your current password, then your new password twice.</p>
+                <p class="form-hint">Current password, then new password twice.</p>
                 <div class="form-grid modal-form-grid two-column">
                   <div>
                     <label>{{ password_form.old_password.label }}</label>
@@ -231,7 +226,7 @@
               </form>
               <div class="profile-forgot-panel">
                 <h3 class="h6">Forgot your password?</h3>
-                <p class="form-hint">We will email a temporary alphanumeric password to your account email. You will be signed out until you log in with it and set a new password.</p>
+                <p class="form-hint">Sends a temporary password to your email. You’ll be signed out until you sign in with it.</p>
                 <a class="btn outline-btn" href="{{ url_for('main.forgot_password') }}">Email me a temporary password</a>
               </div>
               <div class="profile-danger-zone" aria-labelledby="deleteAccountZoneTitle">
@@ -261,11 +256,11 @@
           <p class="profile-delete-warn-text">
             This will <strong>permanently</strong> remove your colony, resources, upgrades, score, missions, discussion posts and comments, and any reward exchanges you took part in. You will not be able to recover this progress.
           </p>
-          <p class="form-hint mb-0">If you are sure, tap OK and you will be asked for your password next.</p>
+          <p class="form-hint mb-0">Next step: confirm with your account password.</p>
         </div>
         <div class="modal-footer profile-delete-modal-footer">
-          <button type="button" class="btn secondary-btn" data-bs-dismiss="modal">No, I want to stay</button>
-          <button type="button" class="btn profile-delete-confirm-advance" id="deleteAccountProceedBtn">OK — I understand</button>
+          <button type="button" class="btn secondary-btn" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn profile-delete-confirm-advance" id="deleteAccountProceedBtn">Continue</button>
         </div>
       </div>
     </div>

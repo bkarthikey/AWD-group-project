@@ -8,7 +8,7 @@
     <div>
       <p class="eyebrow">Colony community</p>
       <h1>Discussion Board</h1>
-      <p>Share colony strategies, compare builds, comment on other colonies, and arrange oxygen, water, or mineral reward exchanges.</p>
+      <p>Posts, comments, and resource exchanges with other commanders.</p>
     </div>
     <div class="community-stats">
       <div><strong>{{ posts|length }}</strong><span>Active Posts</span></div>
@@ -24,9 +24,8 @@
             <p class="eyebrow mini">Commander search</p>
             <h2>Find colony builders</h2>
           </div>
-          <span class="status-chip">AJAX</span>
         </div>
-        <p>Search for other commanders to view profiles, discuss colony layouts, or arrange a future reward exchange.</p>
+        <p>Search by username to open profiles.</p>
         <label for="userSearchInput">Search username</label>
         <input id="userSearchInput" class="form-control" type="search" placeholder="Type at least 2 letters">
         <div id="userSearchResults" class="user-search-results" aria-live="polite"></div>
@@ -38,7 +37,6 @@
             <p class="eyebrow mini">Create post</p>
             <h2>Share a colony strategy</h2>
           </div>
-          <span class="status-chip">Database-backed</span>
         </div>
 
         {% if current_user.is_authenticated %}
@@ -82,7 +80,7 @@
           </form>
         {% else %}
           <div class="discussion-empty">
-            <p>Log in to create discussion posts and comment on colony strategies.</p>
+            <p>Log in to post and comment.</p>
             <a href="{{ url_for('main.login') }}" class="primary-btn btn">Login to Post</a>
           </div>
         {% endif %}
@@ -132,7 +130,7 @@
                   <p>{{ comment.content }}</p>
                 </div>
               {% else %}
-                <p class="no-comments">No comments yet. Start the strategy discussion.</p>
+                <p class="no-comments">No comments yet.</p>
               {% endfor %}
 
               {% if current_user.is_authenticated %}
@@ -159,7 +157,7 @@
       <section class="discussion-panel reward-exchange-panel">
         <p class="eyebrow mini">Reward exchange</p>
         <h2>Open Resource Exchanges</h2>
-        <p>Offer spare resources to other commanders or request support when your colony is short on supplies.</p>
+        <p>Open offers and requests from the community.</p>
 
         <div class="exchange-list">
           {% for offer in exchange_offers %}
@@ -247,7 +245,7 @@
         <section class="discussion-panel reward-exchange-panel">
           <p class="eyebrow mini">Fulfilled requests</p>
           <h2>Your Completed Requests</h2>
-          <p>See who helped your colony and send a short thanks message back.</p>
+          <p>Fulfillers and optional thank-you notes.</p>
 
           <div class="fulfilled-request-list">
             {% for request_item in fulfilled_requests %}
@@ -300,7 +298,7 @@
           </form>
         {% else %}
           <div class="discussion-empty compact">
-            <p>Log in to offer spare resources or request oxygen, water, and minerals from the community.</p>
+            <p>Log in to create an offer or request.</p>
             <a href="{{ url_for('main.login') }}" class="primary-btn btn">Login to Trade</a>
           </div>
         {% endif %}
