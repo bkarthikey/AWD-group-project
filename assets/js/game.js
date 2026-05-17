@@ -91,7 +91,8 @@ const defaultState = {
   achievements: [],
   bonusMultiplier: 1,
   bonusUntil: 0,
-  lastSaved: Date.now()
+  lastSaved: Date.now(),
+  missions: []
 };
 
 const stage = document.getElementById("planetStage");
@@ -113,9 +114,8 @@ const comboCount = document.getElementById("comboCount");
 const clickPowerCount = document.getElementById("clickPowerCount");
 const corePower = document.getElementById("corePower");
 const rateCount = document.getElementById("rateCount");
-const missionText = document.getElementById("missionText");
-const missionFill = document.getElementById("missionFill");
-const missionReward = document.getElementById("missionReward");
+const missionLead = document.getElementById("missionLead");
+const missionList = document.getElementById("missionList");
 const nodePositions = {
   oxygen: { left: "24%", bottom: "132px" },
   water: { left: "68%", bottom: "118px" },
@@ -158,7 +158,8 @@ function loadOfflineState() {
       upgrades: { ...defaultState.upgrades, ...saved.upgrades },
       achievements: saved.achievements || [],
       scoreBonus,
-      score: extractionScore + scoreBonus
+      score: extractionScore + scoreBonus,
+      missions: Array.isArray(saved.missions) ? saved.missions : base.missions
     };
   } catch (error) {
     return cloneDefaultState();
@@ -257,6 +258,9 @@ function applyServerPayload(payload) {
     ...state.upgrades,
     ...(payload.upgrades || {})
   };
+  if (Array.isArray(payload.missions)) {
+    state.missions = payload.missions;
+  }
 }
 
 async function hydrateFromServer(options = {}) {
@@ -388,47 +392,83 @@ function updateDisplay() {
     }
   }
 
-  updateStatusBars();
   updateMission();
   updateUpgradeButtons();
   checkAchievements();
   updateAchievementList();
 }
 
-function updateStatusBars() {
-  const oxygenStatus = document.getElementById("oxygenStatus");
-  const waterStatus = document.getElementById("waterStatus");
-  const powerStatus = document.getElementById("powerStatus");
-  const fills = document.querySelectorAll(".left-hud .fill");
-  const oxygenPercent = Math.min(100, Math.floor(35 + state.resources.oxygen / 12));
-  const waterPercent = Math.min(100, Math.floor(30 + state.resources.water / 12));
-  const powerPercent = Math.min(100, Math.floor(25 + getTotalRate() * 8 + state.score / 300));
-
-  if (oxygenStatus) oxygenStatus.textContent = `${oxygenPercent}%`;
-  if (waterStatus) waterStatus.textContent = `${waterPercent}%`;
-  if (powerStatus) powerStatus.textContent = `${powerPercent}%`;
-  if (fills[0]) fills[0].style.width = `${oxygenPercent}%`;
-  if (fills[1]) fills[1].style.width = `${waterPercent}%`;
-  if (fills[2]) fills[2].style.width = `${powerPercent}%`;
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function updateMission() {
+  if (!missionLead || !missionList) return;
+
+  if (backendEnabled) {
+    const ms = state.missions || [];
+    if (!ms.length) {
+      missionLead.textContent = "Establishing harvest directives…";
+      missionList.innerHTML = "";
+      return;
+    }
+    missionLead.textContent = `Complete quotas to earn bonus score — ${ms.length} active directive${ms.length === 1 ? "" : "s"}.`;
+    missionList.innerHTML = ms
+      .map((m) => {
+        const pct = Math.min(100, m.target > 0 ? (m.progress / m.target) * 100 : 0);
+        const tag = escapeHtml(m.resource || "");
+        return `<article class="directive-card directive-card--${tag}">
+          <header class="directive-head">
+            <span class="directive-tag">${tag}</span>
+            <span class="directive-reward">+${formatNumber(m.reward)} score</span>
+          </header>
+          <h4 class="directive-title">${escapeHtml(m.title || "")}</h4>
+          <p class="directive-sub">${escapeHtml(m.subtitle || "")}</p>
+          <div class="directive-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}">
+            <div class="directive-fill" style="width:${pct}%"></div>
+          </div>
+          <footer class="directive-foot">
+            <span>${formatNumber(m.progress)} / ${formatNumber(m.target)}</span>
+            <span>${pct.toFixed(0)}%</span>
+          </footer>
+        </article>`;
+      })
+      .join("");
+    return;
+  }
+
   const milestone = getCurrentMilestone();
   if (!milestone) {
-    if (missionText) missionText.textContent = "Megacolony online. Keep upgrading to chase a higher score.";
-    if (missionFill) missionFill.style.width = "100%";
-    if (missionReward) missionReward.textContent = "All milestones complete";
+    missionLead.textContent = "Offline mode: all milestones complete. Play on the server for colony directives.";
+    missionList.innerHTML = "";
     return;
   }
 
   const previousTarget = milestones[state.milestoneIndex - 1]?.target || 0;
   const currentProgress = Math.max(0, state.totalCollected - previousTarget);
   const needed = milestone.target - previousTarget;
-  const percent = Math.min(100, (currentProgress / needed) * 100);
+  const percent = Math.min(100, needed > 0 ? (currentProgress / needed) * 100 : 100);
 
-  if (missionText) missionText.textContent = milestone.text;
-  if (missionFill) missionFill.style.width = `${percent}%`;
-  if (missionReward) missionReward.textContent = `Reward: +${milestone.reward} of every resource`;
+  missionLead.textContent = "Colony milestone (saved locally)";
+  missionList.innerHTML = `<article class="directive-card directive-card--offline">
+    <header class="directive-head">
+      <span class="directive-tag">Milestone</span>
+      <span class="directive-reward">+${formatNumber(milestone.reward)} each resource</span>
+    </header>
+    <h4 class="directive-title">${escapeHtml(milestone.text)}</h4>
+    <p class="directive-sub">Reach ${formatNumber(milestone.target)} total resources collected.</p>
+    <div class="directive-track">
+      <div class="directive-fill" style="width:${percent}%"></div>
+    </div>
+    <footer class="directive-foot">
+      <span>${formatNumber(state.totalCollected)} / ${formatNumber(milestone.target)}</span>
+      <span>${percent.toFixed(0)}%</span>
+    </footer>
+  </article>`;
 
   if (state.totalCollected >= milestone.target) {
     state.resources.oxygen += milestone.reward;

@@ -11,6 +11,7 @@ from .colony_service import (
     refresh_colony_score,
 )
 from .extensions import db
+from .missions import process_mission_resource_gain
 from .models import Event, User
 
 
@@ -51,6 +52,7 @@ def collect():
     setattr(colony, resource, getattr(colony, resource) + amount)
     colony.total_collected += amount
     colony.best_combo = max(colony.best_combo, best_combo)
+    process_mission_resource_gain(colony, resource, amount)
     refresh_colony_score(colony)
     db.session.commit()
 

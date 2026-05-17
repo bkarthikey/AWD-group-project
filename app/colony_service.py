@@ -59,6 +59,7 @@ def apply_passive_income(colony, now=None):
 
     upgrades = get_upgrade_levels(colony)
     total_earned = 0
+    from .missions import process_mission_resource_gain
 
     for upgrade_type, config in UPGRADES.items():
         if upgrade_type == "click":
@@ -70,16 +71,21 @@ def apply_passive_income(colony, now=None):
             continue
 
         setattr(colony, upgrade_type, getattr(colony, upgrade_type) + earned)
+        colony.total_collected += earned
         total_earned += earned
 
-    colony.total_collected += total_earned
+        process_mission_resource_gain(colony, upgrade_type, earned)
+
     colony.updated_at = now
     refresh_colony_score(colony)
     return total_earned > 0
 
 
 def colony_payload(colony):
+    from .missions import ensure_active_missions, missions_for_api
+
     upgrades = get_upgrade_levels(colony)
+    ensure_active_missions(colony)
 
     return {
         "resources": colony.resource_dict(),
@@ -88,6 +94,7 @@ def colony_payload(colony):
             upgrade_type: round(upgrades[upgrade_type] * get_resource_rate(upgrade_type, upgrades[upgrade_type]), 1)
             for upgrade_type in UPGRADES
         },
+        "missions": missions_for_api(colony),
     }
 
 

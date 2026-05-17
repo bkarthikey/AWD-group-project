@@ -22,6 +22,22 @@ def create_logged_in_client():
     return app, client
 
 
+def test_colony_state_includes_active_missions():
+    app, client = create_logged_in_client()
+
+    response = client.get("/api/colony-state")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "missions" in data
+    assert isinstance(data["missions"], list)
+    assert len(data["missions"]) >= 1
+    m0 = data["missions"][0]
+    assert "resource" in m0 and "target" in m0 and "progress" in m0 and "reward" in m0
+
+    with app.app_context():
+        db.drop_all()
+
+
 def test_collect_persists_to_sqlite_and_colony_state_matches():
     app, client = create_logged_in_client()
 

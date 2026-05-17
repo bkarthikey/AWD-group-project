@@ -29,28 +29,13 @@
 
       <div class="news-ticker" id="newsTicker">Colony news: command center waiting for your first harvest.</div>
 
-      <div class="stat-row">
-        <span>Oxygen Stability</span><strong id="oxygenStatus">72%</strong>
-      </div>
-      <div class="progress"><div class="fill cyan" style="width:72%"></div></div>
-
-      <div class="stat-row">
-        <span>Water Reserve</span><strong id="waterStatus">61%</strong>
-      </div>
-      <div class="progress"><div class="fill blue" style="width:61%"></div></div>
-
-      <div class="stat-row">
-        <span>Colony Power</span><strong id="powerStatus">48%</strong>
-      </div>
-      <div class="progress"><div class="fill amber" style="width:48%"></div></div>
-
-      <div class="mission-card">
-        <h3>Mission</h3>
-        <p id="missionText">Collect 250 total resources to unlock the next colony milestone.</p>
-        <div class="mission-progress">
-          <div class="mission-fill" id="missionFill"></div>
+      <div class="mission-board mission-card" id="missionBoard">
+        <div class="mission-board-head">
+          <h3>Colony directives</h3>
+          <span class="mission-pill">Harvest quotas</span>
         </div>
-        <strong id="missionReward">Reward: +20 of every resource</strong>
+        <p class="mission-board-lead" id="missionLead">Syncing directives…</p>
+        <div id="missionList" class="directive-list" aria-live="polite"></div>
       </div>
 
       <div class="mission-card compact-stats">
