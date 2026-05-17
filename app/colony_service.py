@@ -39,6 +39,13 @@ def get_upgrade_levels(colony):
     return upgrades
 
 
+def refresh_colony_score(colony):
+    """Total score = 1 point per 12 lifetime resources extracted (any mix) + bonus (upgrades, etc.)."""
+    extraction_score = colony.total_collected // 12
+    bonus = colony.score_bonus or 0
+    colony.score = extraction_score + bonus
+
+
 def apply_passive_income(colony, now=None):
     now = now or datetime.now(timezone.utc)
     last_update = colony.updated_at
@@ -47,6 +54,7 @@ def apply_passive_income(colony, now=None):
 
     elapsed_seconds = int((now - last_update).total_seconds())
     if elapsed_seconds <= 0:
+        refresh_colony_score(colony)
         return False
 
     upgrades = get_upgrade_levels(colony)
@@ -66,6 +74,7 @@ def apply_passive_income(colony, now=None):
 
     colony.total_collected += total_earned
     colony.updated_at = now
+    refresh_colony_score(colony)
     return total_earned > 0
 
 

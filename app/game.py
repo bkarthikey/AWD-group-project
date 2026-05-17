@@ -8,6 +8,7 @@ from .colony_service import (
     get_or_create_upgrade,
     get_ranked_public_colonies,
     get_upgrade_cost,
+    refresh_colony_score,
 )
 from .extensions import db
 from .models import Event, User
@@ -49,8 +50,8 @@ def collect():
     apply_passive_income(colony)
     setattr(colony, resource, getattr(colony, resource) + amount)
     colony.total_collected += amount
-    colony.score += amount * combo * (4 if critical else 2)
     colony.best_combo = max(colony.best_combo, best_combo)
+    refresh_colony_score(colony)
     db.session.commit()
 
     return jsonify(colony_payload(colony))
@@ -85,7 +86,8 @@ def buy_upgrade():
         setattr(colony, config["cost_resource"], available - cost)
 
     upgrade.level += 1
-    colony.score += cost * 3
+    colony.score_bonus += cost * 3
+    refresh_colony_score(colony)
     event_label = config["cost_resource"] == "mixed" and "Harvest Enhancer" or f"{upgrade_type.title()} extractor"
     db.session.add(Event(colony=colony, message=f"{event_label} upgraded to level {upgrade.level}."))
     db.session.commit()

@@ -82,6 +82,7 @@ const defaultState = {
   totalCollected: 0,
   totalClicks: 0,
   score: 0,
+  scoreBonus: 0,
   bestCombo: 1,
   milestoneIndex: 0,
   achievements: [],
@@ -136,12 +137,22 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
     if (!saved) return cloneDefaultState();
 
+    const base = cloneDefaultState();
+    const totalCollected = saved.totalCollected ?? base.totalCollected;
+    const extractionScore = Math.floor(totalCollected / 12);
+    const scoreBonus =
+      typeof saved.scoreBonus === "number"
+        ? saved.scoreBonus
+        : Math.max(0, (saved.score ?? 0) - extractionScore);
+
     return {
-      ...cloneDefaultState(),
+      ...base,
       ...saved,
       resources: { ...defaultState.resources, ...saved.resources },
       upgrades: { ...defaultState.upgrades, ...saved.upgrades },
-      achievements: saved.achievements || []
+      achievements: saved.achievements || [],
+      scoreBonus,
+      score: extractionScore + scoreBonus
     };
   } catch (error) {
     return cloneDefaultState();
@@ -179,6 +190,7 @@ function applyServerPayload(payload) {
   state.resources.water = payload.resources.water;
   state.resources.minerals = payload.resources.minerals;
   state.score = payload.resources.score;
+  state.scoreBonus = payload.resources.score_bonus ?? 0;
   state.totalCollected = payload.resources.total_collected;
   state.bestCombo = Math.max(state.bestCombo, payload.resources.best_combo || 1);
   state.upgrades = {
@@ -221,6 +233,12 @@ async function syncCollection(resource, amount, bestCombo, comboValue, criticalH
   } finally {
     pendingCollectRequests -= 1;
   }
+}
+
+function recomputeScoreFromTotals() {
+  const extraction = Math.floor(state.totalCollected / 12);
+  const bonus = state.scoreBonus || 0;
+  state.score = extraction + bonus;
 }
 
 function formatNumber(value) {
@@ -353,7 +371,8 @@ function updateMission() {
     state.resources.oxygen += milestone.reward;
     state.resources.water += milestone.reward;
     state.resources.minerals += milestone.reward;
-    state.score += milestone.reward * 8;
+    state.scoreBonus += milestone.reward * 8;
+    recomputeScoreFromTotals();
     state.milestoneIndex += 1;
     addEvent(`🏆 Milestone reached. Colony gained +${milestone.reward} of every resource.`);
     saveState();
@@ -443,12 +462,10 @@ function collectResource(event) {
   const baseAmount = getClickPower() + Math.floor(combo / 8);
   const targetAmount = (critical ? baseAmount + 2 + Math.floor(combo / 6) : baseAmount) * multiplier;
   const amount = resolveClickAmount(targetAmount);
-  const scoreGain = amount * combo * (critical ? 4 : 2);
-
   state.resources[gained] += amount;
   state.totalCollected += amount;
   state.totalClicks += 1;
-  state.score += scoreGain;
+  recomputeScoreFromTotals();
   state.bestCombo = Math.max(state.bestCombo, combo);
 
   showGain(`+${formatNumber(amount)} ${gained}${critical ? "!" : ""}`, gained, event);
@@ -545,7 +562,8 @@ function claimCosmicBonus(event) {
     state.resources.oxygen += burst;
     state.resources.water += burst;
     state.resources.minerals += burst;
-    state.score += burst * 12;
+    state.scoreBonus += burst * 12;
+    recomputeScoreFromTotals();
     addEvent(`☄️ Comet cache claimed: +${formatNumber(burst)} of every resource.`);
     showToast(`☄️ +${formatNumber(burst)} each`);
   }
@@ -597,7 +615,8 @@ function buyUpgrade(type) {
   }
 
   state.upgrades[type] += 1;
-  state.score += cost * 3;
+  state.scoreBonus += cost * 3;
+  recomputeScoreFromTotals();
   addEvent(`${config.icon} ${config.label} upgraded to level ${state.upgrades[type]}.`);
   saveState();
   updateDisplay();
@@ -648,7 +667,7 @@ function moveAstronautToNode(type) {
 }
 
 function generatePassiveResources() {
-  if (backendEnabled && pendingCollectRequests > 0) return;
+  if (backendEnabled) return;
 
   Object.keys(upgradeConfig).forEach((type) => {
     const rate = getResourceRate(type);
@@ -656,9 +675,9 @@ function generatePassiveResources() {
       const amount = rate * getActiveMultiplier();
       state.resources[type] += amount;
       state.totalCollected += amount;
-      state.score += amount * 4;
     }
   });
+  recomputeScoreFromTotals();
 
   // Move astronaut occasionally
   if (getTotalRate() > 0 && Date.now() - lastMove > 5000) {
