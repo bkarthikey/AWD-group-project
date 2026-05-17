@@ -6,21 +6,35 @@
 <main class="content-shell">
   <header class="page-header">
     <p class="eyebrow">Worldwide commanders</p>
-    <h1>Top 10 Colonies</h1>
+    <h1>Top 15 Colonies</h1>
     <p>Players can view public colonies. Private colonies only show basic profile information.</p>
   </header>
 
   <section class="leaderboard">
-    <div class="leader-row head"><span>Rank</span><span>Commander</span><span>Colony Score</span><span>Status</span></div>
+    <div class="leader-row head"><span>Rank</span><span>Commander</span><span>Country</span><span>Score</span><span>Status</span></div>
     {% for colony in colonies %}
       <a href="{{ url_for('main.profile', username=colony.user.username) }}" class="leader-row">
-        <span>#{{ loop.index }}</span>
-        <span>{{ colony.user.username }}</span>
+        <span>
+          {% if loop.index == 1 %}🥇
+          {% elif loop.index == 2 %}🥈
+          {% elif loop.index == 3 %}🥉
+          {% else %}#{{ loop.index }}
+          {% endif %}
+        </span>
+        <span class="leader-user">
+          {% if colony.user.profile_image %}
+            <img src="{{ url_for('static', filename='uploads/profiles/' ~ colony.user.profile_image) }}" alt="{{ colony.user.username }} avatar" class="leader-avatar">
+          {% else %}
+            <span class="leader-avatar">🧑‍🚀</span>
+          {% endif %}
+          {{ colony.user.username }}
+        </span>
+        <span>{{ colony.user.country or "—" }}</span>
         <span>{{ "{:,}".format(colony.score) }}</span>
         <span class="public">Public</span>
       </a>
     {% else %}
-      <div class="leader-row"><span>-</span><span>No colonies yet</span><span>0</span><span class="private">Waiting</span></div>
+      <div class="leader-row"><span>-</span><span>No colonies yet</span><span>—</span><span>0</span><span class="private">Waiting</span></div>
     {% endfor %}
   </section>
 </main>

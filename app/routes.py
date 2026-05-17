@@ -1,4 +1,8 @@
 import os
+import random
+import smtplib
+import string
+from email.message import EmailMessage
 from uuid import uuid4
 
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
@@ -10,7 +14,11 @@ from .extensions import db
 from .forms import (
     CommentForm,
     DiscussionPostForm,
+    ForgotPasswordForm,
     LoginForm,
+    PasswordChangeForm,
+    ProfileForm,
+    PrivacyForm,
     RegisterForm,
     RewardExchangeForm,
     ThanksMessageForm,
@@ -37,8 +45,20 @@ def save_discussion_image(file_storage):
     safe_name = secure_filename(file_storage.filename)
     _, extension = os.path.splitext(safe_name)
     stored_name = f"{uuid4().hex}{extension.lower()}"
-    os.makedirs(current_app.config["UPLOAD_FOLDER"], exist_ok=True)
-    file_storage.save(os.path.join(current_app.config["UPLOAD_FOLDER"], stored_name))
+    os.makedirs(current_app.config["DISCUSSION_UPLOAD_FOLDER"], exist_ok=True)
+    file_storage.save(os.path.join(current_app.config["DISCUSSION_UPLOAD_FOLDER"], stored_name))
+    return stored_name
+
+
+def save_profile_image(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    safe_name = secure_filename(file_storage.filename)
+    _, extension = os.path.splitext(safe_name)
+    stored_name = f"{uuid4().hex}{extension.lower()}"
+    os.makedirs(current_app.config["PROFILE_UPLOAD_FOLDER"], exist_ok=True)
+    file_storage.save(os.path.join(current_app.config["PROFILE_UPLOAD_FOLDER"], stored_name))
     return stored_name
 
 
@@ -46,9 +66,67 @@ def delete_discussion_image(image_filename):
     if not image_filename:
         return
 
-    image_path = os.path.join(current_app.config["UPLOAD_FOLDER"], image_filename)
+    image_path = os.path.join(current_app.config["DISCUSSION_UPLOAD_FOLDER"], image_filename)
     if os.path.exists(image_path):
         os.remove(image_path)
+
+
+def send_temporary_password_email(user, temp_password):
+    mail_server = current_app.config.get("MAIL_SERVER")
+    if not mail_server:
+        current_app.logger.warning("Email server not configured; temporary password not emailed.")
+        return False
+
+    message = EmailMessage()
+    message["Subject"] = "Space Colony temporary password"
+    message["From"] = current_app.config.get("MAIL_DEFAULT_SENDER", "noreply@spacecolony.local")
+    message["To"] = user.email
+    message.set_content(
+        f"Commander {user.username},\n\nYour temporary password is: {temp_password}\n"
+        "Use it to log in and change your password immediately.\n\n"
+        "If you did not request this, please ignore this message."
+    )
+
+    with smtplib.SMTP(mail_server, current_app.config.get("MAIL_PORT", 25)) as server:
+        if current_app.config.get("MAIL_USE_TLS"):
+            server.starttls()
+        username = current_app.config.get("MAIL_USERNAME")
+        password = current_app.config.get("MAIL_PASSWORD")
+        if username and password:
+            server.login(username, password)
+        server.send_message(message)
+
+    return True
+
+
+def generate_temporary_password(length=12):
+    alphabet = string.ascii_letters + string.digits
+    return "".join(random.choice(alphabet) for _ in range(length))
+
+
+def get_public_rank(colony):
+    public_colonies = (
+        Colony.query.join(User)
+        .filter(User.is_public.is_(True))
+        .order_by(Colony.score.desc())
+        .all()
+    )
+    for index, public_colony in enumerate(public_colonies, start=1):
+        if public_colony.id == colony.id:
+            return index
+    return None
+
+
+def format_rank_label(rank):
+    if rank == 1:
+        return "🥇 1st"
+    if rank == 2:
+        return "🥈 2nd"
+    if rank == 3:
+        return "🥉 3rd"
+    if rank:
+        return f"#{rank}"
+    return "Unranked"
 
 
 @main_bp.get("/")
@@ -114,7 +192,9 @@ def dashboard():
     colony = ensure_colony(current_user)
     apply_passive_income(colony)
     db.session.commit()
-    return render_template("dashboard.html", colony=colony)
+    public_rank = get_public_rank(colony) if colony.user.is_public else None
+    rank_label = format_rank_label(public_rank)
+    return render_template("dashboard.html", colony=colony, public_rank=public_rank, rank_label=rank_label)
 
 
 @main_bp.get("/upgrades")
@@ -406,14 +486,99 @@ def discussion():
 
 @main_bp.get("/leaderboard")
 def leaderboard_page():
-    colonies = get_ranked_public_colonies()
+    colonies = get_ranked_public_colonies(limit=15)
     return render_template("leaderboard.html", colonies=colonies)
 
 
-@main_bp.get("/profile/<username>")
+@main_bp.route("/forgot-password", methods=["GET", "POST"])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for("main.dashboard"))
+
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        email = form.email.data.strip().lower()
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            flash("If that email is registered, a temporary password has been sent.", "success")
+            return redirect(url_for("main.login"))
+
+        temp_password = generate_temporary_password()
+        user.set_password(temp_password)
+        db.session.commit()
+
+        if send_temporary_password_email(user, temp_password):
+            flash("A temporary password has been sent to your email.", "success")
+        else:
+            flash(
+                "Email server is not configured. A temporary password has been generated and stored. "
+                "Please contact support if you do not receive it.",
+                "warning",
+            )
+        return redirect(url_for("main.login"))
+
+    return render_template("forgot_password.html", form=form)
+
+
+@main_bp.route("/profile/<username>", methods=["GET", "POST"])
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
-    if not user.is_public:
+    is_owner = current_user.is_authenticated and current_user.id == user.id
+
+    if request.method == "POST":
+        if not is_owner:
+            flash("You can only update your own profile.", "error")
+            return redirect(url_for("main.my_profile"))
+
+        form_name = request.form.get("form_name")
+        profile_form = ProfileForm()
+        password_form = PasswordChangeForm()
+        privacy_form = PrivacyForm()
+
+        if form_name == "profile_update" and profile_form.validate_on_submit():
+            new_username = profile_form.username.data.strip()
+            new_email = profile_form.email.data.strip().lower()
+            existing_user = User.query.filter((User.username == new_username) | (User.email == new_email)).filter(User.id != user.id).first()
+            if existing_user:
+                flash("That username or email is already registered.", "error")
+            else:
+                user.username = new_username
+                user.email = new_email
+                user.full_name = profile_form.full_name.data.strip() if profile_form.full_name.data else None
+                user.date_of_birth = profile_form.date_of_birth.data
+                user.country = profile_form.country.data.strip() if profile_form.country.data else None
+                user.is_public = profile_form.is_public.data
+                if profile_form.profile_image.data:
+                    image_name = save_profile_image(profile_form.profile_image.data)
+                    if image_name:
+                        user.profile_image = image_name
+                db.session.commit()
+                flash("Profile updated successfully.", "success")
+                return redirect(url_for("main.my_profile"))
+
+        elif form_name == "password_change" and password_form.validate_on_submit():
+            if not user.check_password(password_form.old_password.data):
+                flash("Current password is incorrect.", "error")
+            else:
+                user.set_password(password_form.new_password.data)
+                db.session.commit()
+                flash("Password updated successfully.", "success")
+                return redirect(url_for("main.my_profile"))
+
+        elif form_name == "privacy_toggle" and privacy_form.validate_on_submit():
+            user.is_public = privacy_form.is_public.data
+            db.session.commit()
+            flash("Profile visibility updated.", "success")
+            return redirect(url_for("main.my_profile"))
+
+        elif form_name == "forgot_password":
+            flash("Please use the forgot password page to request a temporary password.", "error")
+            return redirect(url_for("main.forgot_password"))
+
+        else:
+            flash("Please check the form and try again.", "error")
+
+    if not user.is_public and not is_owner:
         return render_template("profile-private.html", profile_user=user)
 
     colony = ensure_colony(user)
@@ -426,22 +591,29 @@ def profile(username):
         "water_extractors": upgrade_levels["water"],
         "mineral_extractors": upgrade_levels["minerals"],
     }
-    return render_template("profile.html", profile_user=user, colony=colony, profile_stats=profile_stats)
+
+    if "profile_form" not in locals():
+        profile_form = ProfileForm(obj=user)
+    if "password_form" not in locals():
+        password_form = PasswordChangeForm()
+    if "privacy_form" not in locals():
+        privacy_form = PrivacyForm(obj=user)
+
+    public_rank = get_public_rank(colony) if user.is_public else None
+    return render_template(
+        "profile.html",
+        profile_user=user,
+        colony=colony,
+        profile_stats=profile_stats,
+        is_owner=is_owner,
+        public_rank=public_rank,
+        profile_form=profile_form,
+        password_form=password_form,
+        privacy_form=privacy_form,
+    )
 
 
-@main_bp.get("/profile")
+@main_bp.route("/profile", methods=["GET", "POST"])
 @login_required
 def my_profile():
-    return redirect(url_for("main.profile", username=current_user.username))
-@main_bp.post("/profile/privacy")
-@login_required
-def update_profile_privacy():
-    current_user.is_public = "is_public" in request.form
-    db.session.commit()
-
-    if current_user.is_public:
-        flash("Your colony profile is now public.", "success")
-    else:
-        flash("Your colony profile is now private.", "success")
-
-    return redirect(url_for("main.my_profile"))
+    return profile(current_user.username)
