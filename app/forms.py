@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     BooleanField,
+    DateField,
     EmailField,
     HiddenField,
     IntegerField,
@@ -35,6 +36,35 @@ class LoginForm(FlaskForm):
 class PrivacyForm(FlaskForm):
     is_public = BooleanField("Make colony public")
     submit = SubmitField("Save Privacy")
+
+
+class ProfileForm(FlaskForm):
+    username = StringField("Commander Name", validators=[DataRequired(), Length(min=3, max=80)])
+    email = EmailField("Email", validators=[DataRequired(), Email()])
+    full_name = StringField("Full Name", validators=[Optional(), Length(max=150)])
+    date_of_birth = DateField("Date of birth", format="%Y-%m-%d", validators=[Optional()])
+    country = StringField("Country", validators=[Optional(), Length(max=100)])
+    profile_image = FileField(
+        "Profile photo",
+        validators=[FileAllowed(["png", "jpg", "jpeg", "gif", "webp"], "Images only.")],
+    )
+    is_public = BooleanField("Make my profile public and visible on leaderboard")
+    submit = SubmitField("Save profile")
+
+
+class PasswordChangeForm(FlaskForm):
+    old_password = PasswordField("Current password", validators=[DataRequired(), Length(min=8)])
+    new_password = PasswordField("New password", validators=[DataRequired(), Length(min=8)])
+    confirm_password = PasswordField(
+        "Confirm new password",
+        validators=[DataRequired(), EqualTo("new_password", message="Passwords must match.")],
+    )
+    submit = SubmitField("Change password")
+
+
+class ForgotPasswordForm(FlaskForm):
+    email = EmailField("Email", validators=[DataRequired(), Email()])
+    submit = SubmitField("Send temporary password")
 
 
 class DiscussionPostForm(FlaskForm):

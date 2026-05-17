@@ -71,7 +71,7 @@ def colony_payload(colony):
     }
 
 
-def get_ranked_public_colonies(limit=10):
+def get_ranked_public_colonies(limit=15):
     colonies = Colony.query.join(Colony.user).filter(User.is_public.is_(True)).all()
     for colony in colonies:
         apply_passive_income(colony)
