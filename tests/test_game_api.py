@@ -28,13 +28,13 @@ def test_collect_increases_resource():
     response = client.post("/api/collect", json={"resource": "oxygen", "amount": 5})
 
     assert response.status_code == 200
-    assert response.get_json()["resources"]["oxygen"] == 125
+    assert response.get_json()["resources"]["oxygen"] == 55
 
     with app.app_context():
         db.drop_all()
 
 
-def test_collect_scores_combo_and_critical_hits_consistently():
+def test_collect_score_is_one_per_twelve_resources_not_combo_scaled():
     app, client = create_logged_in_client()
 
     response = client.post(
@@ -43,11 +43,12 @@ def test_collect_scores_combo_and_critical_hits_consistently():
     )
 
     assert response.status_code == 200
-    assert response.get_json()["resources"]["score"] == 80
+    assert response.get_json()["resources"]["score"] == 0
 
     with app.app_context():
         colony = Colony.query.first()
-        assert colony.score == 80
+        assert colony.total_collected == 5
+        assert colony.score == 0
         db.drop_all()
 
 
@@ -113,11 +114,16 @@ def test_collect_rejects_invalid_best_combo():
 def test_buy_upgrade_spends_resource_and_increases_level():
     app, client = create_logged_in_client()
 
+    with app.app_context():
+        colony = Colony.query.first()
+        colony.minerals = 200
+        db.session.commit()
+
     response = client.post("/api/buy-upgrade", json={"upgrade_type": "oxygen"})
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data["resources"]["minerals"] == 130
+    assert data["resources"]["minerals"] == 80
     assert data["upgrades"]["oxygen"] == 1
 
     with app.app_context():
@@ -137,15 +143,15 @@ def test_colony_state_applies_passive_income_from_extractors():
 
     assert response.status_code == 200
     data = response.get_json()
-    assert data["resources"]["oxygen"] >= 144
-    assert data["resources"]["total_collected"] >= 24
-    assert data["resources"]["score"] == 0
+    assert data["resources"]["oxygen"] >= 102
+    assert data["resources"]["total_collected"] >= 52
+    assert data["resources"]["score"] == 4
 
     with app.app_context():
         saved_colony = Colony.query.first()
-        assert saved_colony.oxygen >= 144
-        assert saved_colony.total_collected >= 24
-        assert saved_colony.score == 0
+        assert saved_colony.oxygen >= 102
+        assert saved_colony.total_collected >= 52
+        assert saved_colony.score == 4
         db.drop_all()
 
 
@@ -154,7 +160,9 @@ def test_leaderboard_refreshes_passive_income_without_changing_score_ranking():
 
     with app.app_context():
         nova = Colony.query.first()
-        nova.score = 5
+        nova.score_bonus = 5
+        nova.total_collected = 0
+        nova.updated_at = datetime.now(timezone.utc)
         challenger = User(username="Atlas", email="atlas@example.com")
         challenger.set_password("password123")
         challenger_colony = Colony(
@@ -162,8 +170,9 @@ def test_leaderboard_refreshes_passive_income_without_changing_score_ranking():
             oxygen=120,
             water=90,
             minerals=180,
-            score=1,
-            updated_at=datetime.now(timezone.utc) - timedelta(seconds=20),
+            score_bonus=1,
+            total_collected=0,
+            updated_at=datetime.now(timezone.utc),
         )
         db.session.add_all([challenger, challenger_colony])
         db.session.flush()

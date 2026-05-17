@@ -1812,6 +1812,12 @@ a {
   padding: 22px;
 }
 
+.rank-card--first {
+  margin-bottom: 4px;
+  border: 1px solid rgba(93, 228, 255, 0.18);
+  background: linear-gradient(165deg, rgba(93, 228, 255, 0.08), rgba(8, 16, 34, 0.55));
+}
+
 .rank-display {
   margin: 14px 0 8px;
   font-size: 1.5rem;
