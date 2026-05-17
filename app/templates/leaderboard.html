@@ -7,18 +7,20 @@
   <header class="page-header">
     <p class="eyebrow">Worldwide commanders</p>
     <h1>Top 15 Colonies</h1>
-    <p>Players can view public colonies. Private colonies only show basic profile information.</p>
+    <p>Only commanders with a <strong>public</strong> profile appear here. Avatar and country show when provided; ranks 1–3 wear gold, silver, and bronze crowns.</p>
   </header>
 
   <section class="leaderboard">
+    {% set crown_tiers = ["gold", "silver", "bronze"] %}
     <div class="leader-row head"><span>Rank</span><span>Commander</span><span>Country</span><span>Score</span><span>Status</span></div>
     {% for colony in colonies %}
       <a href="{{ url_for('main.profile', username=colony.user.username) }}" class="leader-row">
-        <span>
-          {% if loop.index == 1 %}🥇
-          {% elif loop.index == 2 %}🥈
-          {% elif loop.index == 3 %}🥉
-          {% else %}#{{ loop.index }}
+        <span class="leader-rank-cell {% if loop.index <= 3 %}leader-rank-cell--{{ crown_tiers[loop.index - 1] }}{% endif %}">
+          {% if loop.index <= 3 %}
+            <span class="rank-crown rank-crown--{{ crown_tiers[loop.index - 1] }}" aria-hidden="true">👑</span>
+            <span class="leader-rank-num">{{ loop.index }}</span>
+          {% else %}
+            <span class="leader-rank-num">#{{ loop.index }}</span>
           {% endif %}
         </span>
         <span class="leader-user">
