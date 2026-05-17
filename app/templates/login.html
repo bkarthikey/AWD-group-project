@@ -27,6 +27,9 @@
     </label>
 
     {{ form.submit(class="primary-btn full btn") }}
+    <p class="auth-switch">
+      <a href="{{ url_for('main.forgot_password') }}">Forgot password?</a>
+    </p>
     <p class="auth-switch">New commander? <a href="{{ url_for('main.signup') }}">Create account</a></p>
   </form>
 </main>
