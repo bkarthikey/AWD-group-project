@@ -70,15 +70,24 @@ def buy_upgrade():
     upgrade = get_or_create_upgrade(colony, upgrade_type)
     config = UPGRADES[upgrade_type]
     cost = get_upgrade_cost(upgrade_type, upgrade.level)
-    available = getattr(colony, config["cost_resource"])
 
-    if available < cost:
-        return jsonify({"error": "Not enough resources.", "cost": cost}), 400
+    if config["cost_resource"] == "mixed":
+        per_resource = cost // 3
+        if colony.oxygen < per_resource or colony.water < per_resource or colony.minerals < per_resource:
+            return jsonify({"error": "Not enough resources." , "cost": cost}), 400
+        colony.oxygen -= per_resource
+        colony.water -= per_resource
+        colony.minerals -= per_resource
+    else:
+        available = getattr(colony, config["cost_resource"])
+        if available < cost:
+            return jsonify({"error": "Not enough resources.", "cost": cost}), 400
+        setattr(colony, config["cost_resource"], available - cost)
 
-    setattr(colony, config["cost_resource"], available - cost)
     upgrade.level += 1
     colony.score += cost * 3
-    db.session.add(Event(colony=colony, message=f"{upgrade_type.title()} extractor upgraded to level {upgrade.level}."))
+    event_label = config["cost_resource"] == "mixed" and "Harvest Enhancer" or f"{upgrade_type.title()} extractor"
+    db.session.add(Event(colony=colony, message=f"{event_label} upgraded to level {upgrade.level}."))
     db.session.commit()
 
     return jsonify(colony_payload(colony))
