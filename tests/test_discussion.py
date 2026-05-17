@@ -1,3 +1,4 @@
+import os
 from io import BytesIO
 
 from app import create_app
@@ -56,7 +57,11 @@ def test_discussion_models_store_post_comment_and_exchange():
 
 def test_logged_in_user_can_create_discussion_post(tmp_path):
     app = create_app(TestConfig)
-    app.config["UPLOAD_FOLDER"] = tmp_path
+    upload_root = str(tmp_path)
+    discussion_dir = os.path.join(upload_root, "discussion")
+    os.makedirs(discussion_dir, exist_ok=True)
+    app.config["UPLOAD_FOLDER"] = upload_root
+    app.config["DISCUSSION_UPLOAD_FOLDER"] = discussion_dir
     client = app.test_client()
     with app.app_context():
         db.create_all()
@@ -85,7 +90,7 @@ def test_logged_in_user_can_create_discussion_post(tmp_path):
         saved_post = DiscussionPost.query.filter_by(title="Best oxygen start").first()
         assert saved_post is not None
         assert saved_post.image_filename.endswith(".png")
-        assert (tmp_path / saved_post.image_filename).exists()
+        assert os.path.isfile(os.path.join(discussion_dir, saved_post.image_filename))
 
 
 def test_post_creation_can_add_open_resource_offers():
@@ -246,7 +251,11 @@ def test_another_user_can_comment_on_discussion_post():
 
 def test_post_owner_can_delete_own_discussion_post_and_uploaded_image(tmp_path):
     app = create_app(TestConfig)
-    app.config["UPLOAD_FOLDER"] = tmp_path
+    upload_root = str(tmp_path)
+    discussion_dir = os.path.join(upload_root, "discussion")
+    os.makedirs(discussion_dir, exist_ok=True)
+    app.config["UPLOAD_FOLDER"] = upload_root
+    app.config["DISCUSSION_UPLOAD_FOLDER"] = discussion_dir
     client = app.test_client()
     with app.app_context():
         db.create_all()
@@ -261,7 +270,9 @@ def test_post_owner_can_delete_own_discussion_post_and_uploaded_image(tmp_path):
         db.session.add_all([user, post])
         db.session.commit()
         post_id = post.id
-        (tmp_path / "old-plan.png").write_bytes(b"image")
+        image_path = os.path.join(discussion_dir, "old-plan.png")
+        with open(image_path, "wb") as f:
+            f.write(b"image")
 
     client.post("/login", data={"email": "owner@example.com", "password": "password123"})
     response = client.post(
@@ -276,7 +287,7 @@ def test_post_owner_can_delete_own_discussion_post_and_uploaded_image(tmp_path):
     assert response.status_code == 200
     assert b"Discussion post deleted." in response.data
     assert b"Delete my plan" not in response.data
-    assert not (tmp_path / "old-plan.png").exists()
+    assert not os.path.isfile(os.path.join(discussion_dir, "old-plan.png"))
 
     with app.app_context():
         assert DiscussionPost.query.count() == 0

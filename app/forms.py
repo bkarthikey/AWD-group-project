@@ -75,6 +75,14 @@ class ForgotPasswordForm(FlaskForm):
     submit = SubmitField("Send temporary password")
 
 
+class AccountDeleteForm(FlaskForm):
+    password = PasswordField(
+        "Current password",
+        validators=[DataRequired(), Length(min=8, message="Password must be at least 8 characters.")],
+    )
+    submit = SubmitField("Delete my account permanently")
+
+
 class DiscussionPostForm(FlaskForm):
     title = StringField("Post title", validators=[DataRequired(), Length(min=3, max=120)])
     content = TextAreaField("Strategy notes", validators=[DataRequired(), Length(min=5, max=1200)])
