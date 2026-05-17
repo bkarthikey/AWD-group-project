@@ -24,13 +24,25 @@
 
 1. **Clone** this repository and open a terminal in the project root.
 
-2. **Create a virtual environment** (recommended) and install dependencies:
+2. **Use Python 3.10 or newer.** This project depends on Flask 3 / Werkzeug 3, which **do not run on Python 3.8** (you would see errors when running `flask`). Check your interpreter:
+
+   ```bash
+   python --version
+   ```
+
+   On **Windows**, if `python` is older than 3.10 but you have a newer version installed, create the virtual environment with the **launcher** instead (adjust `3.12` to match what you have, e.g. `3.11`):
+
+   ```bash
+   py -3.12 -m venv .venv
+   ```
+
+   Otherwise (Python 3.10+ already on your `PATH`):
 
    ```bash
    python -m venv .venv
    ```
 
-   Activate it:
+3. **Activate the virtual environment**, then install dependencies:
 
    - **Windows (cmd):** `.venv\Scripts\activate.bat`
    - **Windows (PowerShell):** `.venv\Scripts\Activate.ps1`
@@ -42,24 +54,24 @@
    python -m pip install -r requirements.txt
    ```
 
-3. **Configure environment variables** (optional for local dev; required for production):
+4. **Configure environment variables** (optional for local dev; required for production):
 
    - `SECRET_KEY` — Flask secret (defaults to a dev value in `config.py` if unset).
    - `DATABASE_URL` — SQLAlchemy URI (defaults to `sqlite:///space_colony.db` in the project folder if unset).
 
-4. **Apply database migrations** so the schema matches the models:
+5. **Apply database migrations** so the schema matches the models:
 
    ```bash
    flask --app run.py db upgrade
    ```
 
-5. **Run the development server:**
+6. **Run the development server:**
 
    ```bash
    python run.py
    ```
 
-6. Open a browser at **http://127.0.0.1:5000/**
+7. Open a browser at **http://127.0.0.1:5000/**
 
 **Note:** If you only need an empty database without migration history, you can use `flask --app run.py init-db` instead of `db upgrade` for a quick local setup (migrations are the supported path for the unit).
 
