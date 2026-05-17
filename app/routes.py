@@ -18,7 +18,6 @@ from .forms import (
     LoginForm,
     PasswordChangeForm,
     ProfileForm,
-    PrivacyForm,
     RegisterForm,
     RewardExchangeForm,
     ThanksMessageForm,
@@ -60,6 +59,15 @@ def save_profile_image(file_storage):
     os.makedirs(current_app.config["PROFILE_UPLOAD_FOLDER"], exist_ok=True)
     file_storage.save(os.path.join(current_app.config["PROFILE_UPLOAD_FOLDER"], stored_name))
     return stored_name
+
+
+def delete_profile_image(image_filename):
+    if not image_filename:
+        return
+
+    image_path = os.path.join(current_app.config["PROFILE_UPLOAD_FOLDER"], image_filename)
+    if os.path.exists(image_path):
+        os.remove(image_path)
 
 
 def delete_discussion_image(image_filename):
@@ -118,15 +126,26 @@ def get_public_rank(colony):
 
 
 def format_rank_label(rank):
+    """Human-readable rank text (crowns rendered in templates)."""
+    if rank is None:
+        return "Unranked"
     if rank == 1:
-        return "🥇 1st"
+        return "1st"
     if rank == 2:
-        return "🥈 2nd"
+        return "2nd"
     if rank == 3:
-        return "🥉 3rd"
-    if rank:
-        return f"#{rank}"
-    return "Unranked"
+        return "3rd"
+    return f"#{rank}"
+
+
+def get_rank_crown_tier(rank):
+    if rank == 1:
+        return "gold"
+    if rank == 2:
+        return "silver"
+    if rank == 3:
+        return "bronze"
+    return None
 
 
 @main_bp.get("/")
@@ -145,7 +164,7 @@ def signup():
         email = form.email.data.strip().lower()
 
         if User.query.filter((User.username == username) | (User.email == email)).first():
-            flash("That username or email is already registered.", "error")
+            flash("That commander name or email is already in use. Each email may only register one account.", "error")
             return render_template("signup.html", form=form)
 
         user = User(username=username, email=email)
@@ -194,7 +213,14 @@ def dashboard():
     db.session.commit()
     public_rank = get_public_rank(colony) if colony.user.is_public else None
     rank_label = format_rank_label(public_rank)
-    return render_template("dashboard.html", colony=colony, public_rank=public_rank, rank_label=rank_label)
+    crown_tier = get_rank_crown_tier(public_rank)
+    return render_template(
+        "dashboard.html",
+        colony=colony,
+        public_rank=public_rank,
+        rank_label=rank_label,
+        crown_tier=crown_tier,
+    )
 
 
 @main_bp.get("/upgrades")
@@ -492,14 +518,16 @@ def leaderboard_page():
 
 @main_bp.route("/forgot-password", methods=["GET", "POST"])
 def forgot_password():
-    if current_user.is_authenticated:
-        return redirect(url_for("main.dashboard"))
-
     form = ForgotPasswordForm()
     if form.validate_on_submit():
         email = form.email.data.strip().lower()
         user = User.query.filter_by(email=email).first()
-        if not user:
+
+        if current_user.is_authenticated:
+            if not user or user.id != current_user.id:
+                flash("Enter the email address registered to this account.", "error")
+                return render_template("forgot_password.html", form=form)
+        elif not user:
             flash("If that email is registered, a temporary password has been sent.", "success")
             return redirect(url_for("main.login"))
 
@@ -508,13 +536,16 @@ def forgot_password():
         db.session.commit()
 
         if send_temporary_password_email(user, temp_password):
-            flash("A temporary password has been sent to your email.", "success")
+            flash("A temporary password has been sent to your email. Please sign in again.", "success")
         else:
             flash(
                 "Email server is not configured. A temporary password has been generated and stored. "
                 "Please contact support if you do not receive it.",
                 "warning",
             )
+
+        if current_user.is_authenticated:
+            logout_user()
         return redirect(url_for("main.login"))
 
     return render_template("forgot_password.html", form=form)
@@ -524,6 +555,9 @@ def forgot_password():
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
     is_owner = current_user.is_authenticated and current_user.id == user.id
+    open_edit_modal = False
+    edit_modal_tab = "account"
+    show_password_old_error = False
 
     if request.method == "POST":
         if not is_owner:
@@ -533,49 +567,54 @@ def profile(username):
         form_name = request.form.get("form_name")
         profile_form = ProfileForm()
         password_form = PasswordChangeForm()
-        privacy_form = PrivacyForm()
 
-        if form_name == "profile_update" and profile_form.validate_on_submit():
-            new_username = profile_form.username.data.strip()
-            new_email = profile_form.email.data.strip().lower()
-            existing_user = User.query.filter((User.username == new_username) | (User.email == new_email)).filter(User.id != user.id).first()
-            if existing_user:
-                flash("That username or email is already registered.", "error")
+        if form_name == "profile_update":
+            if profile_form.validate_on_submit():
+                new_username = profile_form.username.data.strip()
+                new_email = profile_form.email.data.strip().lower()
+                existing_user = User.query.filter((User.username == new_username) | (User.email == new_email)).filter(User.id != user.id).first()
+                if existing_user:
+                    flash("That commander name or email is already registered. Each email may only have one account.", "error")
+                    open_edit_modal = True
+                    edit_modal_tab = "account"
+                else:
+                    user.username = new_username
+                    user.email = new_email
+                    user.full_name = profile_form.full_name.data.strip() if profile_form.full_name.data else None
+                    user.date_of_birth = profile_form.date_of_birth.data
+                    country_val = (profile_form.country.data or "").strip()
+                    user.country = country_val or None
+                    user.is_public = profile_form.is_public.data
+                    if profile_form.profile_image.data:
+                        image_name = save_profile_image(profile_form.profile_image.data)
+                        if image_name:
+                            previous = user.profile_image
+                            user.profile_image = image_name
+                            if previous:
+                                delete_profile_image(previous)
+                    db.session.commit()
+                    flash("Profile updated successfully.", "success")
+                    return redirect(url_for("main.profile", username=user.username))
             else:
-                user.username = new_username
-                user.email = new_email
-                user.full_name = profile_form.full_name.data.strip() if profile_form.full_name.data else None
-                user.date_of_birth = profile_form.date_of_birth.data
-                user.country = profile_form.country.data.strip() if profile_form.country.data else None
-                user.is_public = profile_form.is_public.data
-                if profile_form.profile_image.data:
-                    image_name = save_profile_image(profile_form.profile_image.data)
-                    if image_name:
-                        user.profile_image = image_name
-                db.session.commit()
-                flash("Profile updated successfully.", "success")
-                return redirect(url_for("main.my_profile"))
+                open_edit_modal = True
+                edit_modal_tab = "account"
 
-        elif form_name == "password_change" and password_form.validate_on_submit():
-            if not user.check_password(password_form.old_password.data):
-                flash("Current password is incorrect.", "error")
+        elif form_name == "password_change":
+            if password_form.validate_on_submit():
+                if not user.check_password(password_form.old_password.data):
+                    show_password_old_error = True
+                    open_edit_modal = True
+                    edit_modal_tab = "security"
+                else:
+                    user.set_password(password_form.new_password.data)
+                    db.session.commit()
+                    flash("Password updated successfully.", "success")
+                    return redirect(url_for("main.profile", username=user.username))
             else:
-                user.set_password(password_form.new_password.data)
-                db.session.commit()
-                flash("Password updated successfully.", "success")
-                return redirect(url_for("main.my_profile"))
+                open_edit_modal = True
+                edit_modal_tab = "security"
 
-        elif form_name == "privacy_toggle" and privacy_form.validate_on_submit():
-            user.is_public = privacy_form.is_public.data
-            db.session.commit()
-            flash("Profile visibility updated.", "success")
-            return redirect(url_for("main.my_profile"))
-
-        elif form_name == "forgot_password":
-            flash("Please use the forgot password page to request a temporary password.", "error")
-            return redirect(url_for("main.forgot_password"))
-
-        else:
+        elif form_name:
             flash("Please check the form and try again.", "error")
 
     if not user.is_public and not is_owner:
@@ -596,10 +635,10 @@ def profile(username):
         profile_form = ProfileForm(obj=user)
     if "password_form" not in locals():
         password_form = PasswordChangeForm()
-    if "privacy_form" not in locals():
-        privacy_form = PrivacyForm(obj=user)
 
     public_rank = get_public_rank(colony) if user.is_public else None
+    rank_label = format_rank_label(public_rank)
+    crown_tier = get_rank_crown_tier(public_rank)
     return render_template(
         "profile.html",
         profile_user=user,
@@ -607,9 +646,13 @@ def profile(username):
         profile_stats=profile_stats,
         is_owner=is_owner,
         public_rank=public_rank,
+        rank_label=rank_label,
+        crown_tier=crown_tier,
         profile_form=profile_form,
         password_form=password_form,
-        privacy_form=privacy_form,
+        open_edit_modal=open_edit_modal,
+        edit_modal_tab=edit_modal_tab,
+        show_password_old_error=show_password_old_error,
     )
 
 
@@ -617,6 +660,15 @@ def profile(username):
 @login_required
 def my_profile():
     return redirect(url_for("main.profile", username=current_user.username))
+
+
+@main_bp.get("/settings")
+@login_required
+def settings_redirect():
+    """Legacy Settings/Account URL now merged into Profile."""
+    return redirect(url_for("main.my_profile"))
+
+
 @main_bp.post("/profile/privacy")
 @login_required
 def update_profile_privacy():
