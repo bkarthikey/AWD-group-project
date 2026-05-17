@@ -234,9 +234,66 @@
                 <p class="form-hint">We will email a temporary alphanumeric password to your account email. You will be signed out until you log in with it and set a new password.</p>
                 <a class="btn outline-btn" href="{{ url_for('main.forgot_password') }}">Email me a temporary password</a>
               </div>
+              <div class="profile-danger-zone" aria-labelledby="deleteAccountZoneTitle">
+                <h3 class="h6 profile-danger-title" id="deleteAccountZoneTitle">Danger zone</h3>
+                <p class="form-hint profile-danger-lead">
+                  Permanently delete your commander account, colony, discussion activity, and reward exchanges. This cannot be undone.
+                </p>
+                <button type="button" class="btn profile-delete-open" data-bs-toggle="modal" data-bs-target="#deleteAccountWarnModal">
+                  Delete account
+                </button>
+              </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade profile-edit-modal profile-delete-flow-modal" id="deleteAccountWarnModal" tabindex="-1" aria-labelledby="deleteAccountWarnTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header profile-delete-modal-header">
+          <h2 class="modal-title h5" id="deleteAccountWarnTitle">Delete account permanently?</h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="profile-delete-warn-text">
+            This will <strong>permanently</strong> remove your colony, resources, upgrades, score, missions, discussion posts and comments, and any reward exchanges you took part in. You will not be able to recover this progress.
+          </p>
+          <p class="form-hint mb-0">If you are sure, tap OK and you will be asked for your password next.</p>
+        </div>
+        <div class="modal-footer profile-delete-modal-footer">
+          <button type="button" class="btn secondary-btn" data-bs-dismiss="modal">No, I want to stay</button>
+          <button type="button" class="btn profile-delete-confirm-advance" id="deleteAccountProceedBtn">OK — I understand</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade profile-edit-modal profile-delete-flow-modal" id="deleteAccountConfirmModal" tabindex="-1" aria-labelledby="deleteAccountConfirmTitle" data-bs-backdrop="static" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header profile-delete-modal-header">
+          <h2 class="modal-title h5" id="deleteAccountConfirmTitle">Confirm with your password</h2>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Cancel"></button>
+        </div>
+        <form method="post" action="{{ url_for('main.delete_account') }}" class="profile-delete-final-form">
+          {{ delete_account_form.hidden_tag() }}
+          <div class="modal-body">
+            <p class="form-hint">Enter your current account password to permanently delete everything.</p>
+            <label class="profile-delete-pw-label" for="delete_account_password_field">{{ delete_account_form.password.label.text }}</label>
+            <div class="password-field">
+              {{ delete_account_form.password(class="form-control", placeholder="Your password", id="delete_account_password_field", autocomplete="current-password") }}
+              <button class="password-toggle" type="button" data-password-toggle="delete_account_password_field" aria-label="Show password">Show</button>
+            </div>
+            {% for e in delete_account_form.password.errors %}<p class="field-error">{{ e }}</p>{% endfor %}
+          </div>
+          <div class="modal-footer profile-delete-modal-footer">
+            <button type="button" class="btn secondary-btn" data-bs-dismiss="modal">Cancel</button>
+            {{ delete_account_form.submit(class="btn profile-delete-submit-final") }}
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -271,5 +328,31 @@
     });
   </script>
   {% endif %}
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      var proceed = document.getElementById("deleteAccountProceedBtn");
+      if (!proceed || typeof bootstrap === "undefined") return;
+      proceed.addEventListener("click", function() {
+        var warnEl = document.getElementById("deleteAccountWarnModal");
+        var confirmEl = document.getElementById("deleteAccountConfirmModal");
+        if (!warnEl || !confirmEl) return;
+        var warnModal = bootstrap.Modal.getInstance(warnEl) || new bootstrap.Modal(warnEl);
+        var confirmModal = bootstrap.Modal.getOrCreateInstance(confirmEl);
+        warnEl.addEventListener(
+          "hidden.bs.modal",
+          function onWarnHidden() {
+            warnEl.removeEventListener("hidden.bs.modal", onWarnHidden);
+            confirmModal.show();
+            window.setTimeout(function() {
+              var pw = document.getElementById("delete_account_password_field");
+              if (pw) pw.focus();
+            }, 50);
+          },
+          { once: true }
+        );
+        warnModal.hide();
+      });
+    });
+  </script>
   {% endif %}
 {% endblock %}

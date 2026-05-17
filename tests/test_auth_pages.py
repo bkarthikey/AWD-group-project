@@ -1,6 +1,6 @@
 from app import create_app
 from app.extensions import db
-from app.models import Colony, Upgrade, User
+from app.models import Colony, RewardExchange, Upgrade, User
 from config import TestConfig
 
 
@@ -130,6 +130,68 @@ def test_forgot_password_changes_password_after_successful_email(monkeypatch):
         assert user.check_password("TempPass123")
 
 
+def test_delete_account_rejects_wrong_password():
+    app, client = make_client()
+    with app.app_context():
+        user = User(username="Deleter", email="del@example.com")
+        user.set_password("correctpass1")
+        db.session.add(user)
+        db.session.commit()
+
+    client.post("/login", data={"email": "del@example.com", "password": "correctpass1"}, follow_redirects=True)
+
+    response = client.post(
+        "/profile/delete-account",
+        data={"password": "wrongpass1"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Nothing was deleted" in response.data or b"does not match" in response.data
+
+    with app.app_context():
+        assert User.query.filter_by(email="del@example.com").first() is not None
+
+
+def test_delete_account_removes_user_colony_and_exchanges():
+    app, client = make_client()
+    with app.app_context():
+        u1 = User(username="Alpha", email="a@example.com")
+        u1.set_password("password123")
+        u2 = User(username="Beta", email="b@example.com")
+        u2.set_password("password123")
+        c1 = Colony(user=u1, name="A Colony", oxygen=10, water=10, minerals=10, score=5, total_collected=3, best_combo=1)
+        c2 = Colony(user=u2, name="B Colony", oxygen=5, water=5, minerals=5, score=1, total_collected=1, best_combo=1)
+        ex = RewardExchange(
+            sender=u1,
+            receiver=u2,
+            resource_type="oxygen",
+            amount=10,
+            exchange_type="offer",
+            status="open",
+        )
+        db.session.add_all([u1, u2, c1, c2, ex])
+        db.session.commit()
+        uid1 = u1.id
+
+    client.post("/login", data={"email": "a@example.com", "password": "password123"}, follow_redirects=True)
+
+    response = client.post(
+        "/profile/delete-account",
+        data={"password": "password123"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Create account" in response.data or b"Goodbye" in response.data or b"enlist" in response.data
+
+    with app.app_context():
+        assert User.query.filter_by(id=uid1).first() is None
+        assert Colony.query.filter_by(user_id=uid1).first() is None
+        assert RewardExchange.query.count() == 0
+        assert User.query.filter_by(email="b@example.com").first() is not None
+
+
 def test_dashboard_requires_login():
     app, client = make_client()
 
@@ -169,7 +231,8 @@ def test_public_profile_shows_real_colony_stats():
 
     assert response.status_code == 200
     assert b"Atlas Prime" in response.data
-    assert b"1,500" in response.data
+    # Score is derived from total_collected (and bonus) on profile load, not the raw DB score column.
+    assert b"68" in response.data
     assert b"820" in response.data
     assert b"x14" in response.data
     assert b"410" in response.data

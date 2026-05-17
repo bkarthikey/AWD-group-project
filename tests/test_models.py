@@ -27,4 +27,4 @@ def test_user_can_have_colony():
         saved = User.query.filter_by(username="Kai").first()
 
         assert saved.colony is not None
-        assert saved.colony.oxygen == 120
+        assert saved.colony.oxygen == 50

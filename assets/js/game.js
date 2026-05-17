@@ -412,11 +412,11 @@ function updateMission() {
   if (backendEnabled) {
     const ms = state.missions || [];
     if (!ms.length) {
-      missionLead.textContent = "Establishing harvest directives…";
+      missionLead.textContent = "Establishing colony missions…";
       missionList.innerHTML = "";
       return;
     }
-    missionLead.textContent = `Complete quotas to earn bonus score — ${ms.length} active directive${ms.length === 1 ? "" : "s"}.`;
+    missionLead.textContent = `Complete missions for bonus score — ${ms.length} active mission${ms.length === 1 ? "" : "s"}.`;
     missionList.innerHTML = ms
       .map((m) => {
         const pct = Math.min(100, m.target > 0 ? (m.progress / m.target) * 100 : 0);
@@ -443,7 +443,7 @@ function updateMission() {
 
   const milestone = getCurrentMilestone();
   if (!milestone) {
-    missionLead.textContent = "Offline mode: all milestones complete. Play on the server for colony directives.";
+    missionLead.textContent = "Offline mode: all milestones complete. Play on the server for colony missions.";
     missionList.innerHTML = "";
     return;
   }

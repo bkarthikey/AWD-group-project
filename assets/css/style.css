@@ -29,6 +29,51 @@ body {
   overflow-x: hidden;
 }
 
+/* App-wide themed scrollbars (Firefox + WebKit) */
+html {
+  scrollbar-gutter: stable;
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(93, 228, 255, 0.48) rgba(6, 12, 28, 0.72);
+}
+
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: rgba(4, 9, 22, 0.72);
+  border-radius: 999px;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    165deg,
+    rgba(93, 228, 255, 0.55),
+    rgba(107, 167, 255, 0.38) 45%,
+    rgba(184, 140, 255, 0.42)
+  );
+  border-radius: 999px;
+  border: 2px solid rgba(6, 9, 20, 0.88);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    165deg,
+    rgba(123, 240, 255, 0.78),
+    rgba(120, 180, 255, 0.55) 45%,
+    rgba(200, 175, 255, 0.58)
+  );
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .space-bg {
   position: fixed;
   inset: 0;
@@ -468,6 +513,7 @@ a {
 
 .game-layout {
   height: calc(100vh - 76px);
+  min-height: 0;
   display: grid;
   grid-template-columns: 285px 1fr 310px;
   gap: 16px;
@@ -481,6 +527,7 @@ a {
   padding: 18px;
   box-shadow: var(--shadow);
   backdrop-filter: blur(16px);
+  min-height: 0;
   overflow: auto;
 }
 
@@ -575,29 +622,13 @@ a {
   transition: width 0.35s ease;
 }
 
-/* Colony directives (server missions + offline milestone) */
+/* Colony missions (server + offline milestone) */
 .mission-board-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
   margin-bottom: 6px;
 }
 
 .mission-board-head h3 {
   margin: 0;
-}
-
-.mission-pill {
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(93, 228, 255, 0.35);
-  background: linear-gradient(135deg, rgba(93, 228, 255, 0.15), rgba(140, 120, 255, 0.12));
-  color: #b8f4ff;
 }
 
 .mission-board-lead {
@@ -747,6 +778,7 @@ a {
 
 .planet-stage {
   position: relative;
+  min-height: 0;
   overflow: hidden;
   border-radius: 28px;
   border: 1px solid rgba(255,255,255,0.1);
@@ -2647,6 +2679,108 @@ a {
   border-color: rgba(93, 228, 255, 0.45);
   background: rgba(93, 228, 255, 0.12);
   color: var(--text);
+}
+
+/* Profile — danger zone & delete account flow */
+.profile-danger-zone {
+  margin-top: 28px;
+  padding: 18px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 108, 141, 0.35);
+  background: linear-gradient(145deg, rgba(40, 10, 22, 0.55), rgba(255, 108, 141, 0.06));
+}
+
+.profile-danger-title {
+  margin-bottom: 8px;
+  font-family: "Orbitron", sans-serif;
+  color: #ff8ca8;
+  letter-spacing: 0.04em;
+}
+
+.profile-danger-lead {
+  color: rgba(238, 247, 255, 0.88);
+  margin-bottom: 14px;
+}
+
+.btn.profile-delete-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  margin-top: 4px;
+  padding: 11px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 108, 141, 0.55);
+  background: linear-gradient(135deg, rgba(255, 108, 141, 0.22), rgba(180, 40, 70, 0.18));
+  color: #ffe8ec;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  transition: 0.2s ease;
+}
+
+.btn.profile-delete-open:hover {
+  border-color: rgba(255, 140, 160, 0.85);
+  background: linear-gradient(135deg, rgba(255, 130, 150, 0.35), rgba(200, 50, 80, 0.28));
+  color: #fff;
+}
+
+.profile-delete-flow-modal .modal-content {
+  border: 1px solid rgba(255, 108, 141, 0.28);
+  box-shadow: 0 28px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 108, 141, 0.12);
+}
+
+.profile-delete-modal-header {
+  border-bottom-color: rgba(255, 108, 141, 0.2);
+}
+
+.profile-delete-warn-text {
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.55;
+  margin-bottom: 12px;
+}
+
+.profile-delete-modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.btn.profile-delete-confirm-advance {
+  border: 1px solid rgba(255, 191, 95, 0.45);
+  background: linear-gradient(135deg, rgba(255, 191, 95, 0.2), rgba(255, 140, 100, 0.15));
+  color: #ffe9c9;
+  font-weight: 800;
+}
+
+.btn.profile-delete-confirm-advance:hover {
+  border-color: rgba(255, 210, 140, 0.65);
+  color: #fff;
+}
+
+.profile-delete-final-form .modal-body {
+  padding-top: 0;
+}
+
+.profile-delete-pw-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.btn.profile-delete-submit-final {
+  border: 1px solid rgba(255, 108, 141, 0.65);
+  background: linear-gradient(135deg, rgba(255, 80, 110, 0.45), rgba(160, 30, 60, 0.55));
+  color: #fff;
+  font-weight: 800;
+}
+
+.btn.profile-delete-submit-final:hover {
+  border-color: rgba(255, 160, 180, 0.9);
+  background: linear-gradient(135deg, rgba(255, 100, 130, 0.6), rgba(180, 40, 75, 0.65));
+  color: #fff;
 }
 
 .wide-stats {

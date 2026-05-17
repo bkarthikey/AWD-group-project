@@ -12,6 +12,7 @@ from werkzeug.utils import secure_filename
 from .colony_service import apply_passive_income, get_ranked_public_colonies, get_upgrade_levels
 from .extensions import db
 from .forms import (
+    AccountDeleteForm,
     CommentForm,
     DiscussionPostForm,
     ForgotPasswordForm,
@@ -77,6 +78,19 @@ def delete_discussion_image(image_filename):
     image_path = os.path.join(current_app.config["DISCUSSION_UPLOAD_FOLDER"], image_filename)
     if os.path.exists(image_path):
         os.remove(image_path)
+
+
+def permanently_delete_user_account(user):
+    """Remove the user and all related rows and uploaded files (colony, posts, exchanges, etc.)."""
+    uid = user.id
+    for post in DiscussionPost.query.filter_by(user_id=uid).all():
+        delete_discussion_image(post.image_filename)
+    RewardExchange.query.filter(
+        (RewardExchange.sender_id == uid) | (RewardExchange.receiver_id == uid)
+    ).delete(synchronize_session=False)
+    delete_profile_image(user.profile_image)
+    db.session.delete(user)
+    db.session.commit()
 
 
 def send_temporary_password_email(user, temp_password):
@@ -550,6 +564,34 @@ def forgot_password():
     return render_template("forgot_password.html", form=form)
 
 
+@main_bp.post("/profile/delete-account")
+@login_required
+def delete_account():
+    form = AccountDeleteForm()
+    if not form.validate_on_submit():
+        flash("Please enter your password correctly to delete your account.", "error")
+        return redirect(url_for("main.profile", username=current_user.username, open_edit="security"))
+
+    user = db.session.get(User, current_user.id)
+    if not user:
+        logout_user()
+        return redirect(url_for("main.signup"))
+
+    if not user.check_password(form.password.data):
+        flash("That password does not match your account. Nothing was deleted.", "error")
+        return redirect(url_for("main.profile", username=user.username, open_edit="security"))
+
+    username = user.username
+    permanently_delete_user_account(user)
+    logout_user()
+    flash(
+        f"Goodbye, Commander {username}. Your colony and all associated data have been permanently removed. "
+        "You are welcome to enlist again anytime.",
+        "success",
+    )
+    return redirect(url_for("main.signup"))
+
+
 @main_bp.route("/profile/<username>", methods=["GET", "POST"])
 def profile(username):
     user = User.query.filter_by(username=username).first_or_404()
@@ -616,6 +658,10 @@ def profile(username):
         elif form_name:
             flash("Please check the form and try again.", "error")
 
+    if request.method == "GET" and is_owner and request.args.get("open_edit") == "security":
+        open_edit_modal = True
+        edit_modal_tab = "security"
+
     if not user.is_public and not is_owner:
         return render_template("profile-private.html", profile_user=user)
 
@@ -634,6 +680,7 @@ def profile(username):
         profile_form = ProfileForm(obj=user)
     if "password_form" not in locals():
         password_form = PasswordChangeForm()
+    delete_account_form = AccountDeleteForm()
 
     public_rank = get_public_rank(colony) if user.is_public else None
     rank_label = format_rank_label(public_rank)
@@ -649,6 +696,7 @@ def profile(username):
         crown_tier=crown_tier,
         profile_form=profile_form,
         password_form=password_form,
+        delete_account_form=delete_account_form,
         open_edit_modal=open_edit_modal,
         edit_modal_tab=edit_modal_tab,
         show_password_old_error=show_password_old_error,
@@ -680,7 +728,3 @@ def update_profile_privacy():
         flash("Your colony profile is now private.", "success")
 
     return redirect(url_for("main.my_profile"))
-@main_bp.route("/settings")
-@login_required
-def settings():
-    return render_template("settings.html")
