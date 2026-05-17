@@ -380,6 +380,45 @@ a {
   box-shadow: 0 0 0 0.2rem rgba(93, 228, 255, 0.12);
 }
 
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  padding-right: 78px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  width: auto;
+  padding: 6px 10px;
+  border: 1px solid rgba(93, 228, 255, 0.24);
+  border-radius: 10px;
+  background: rgba(93, 228, 255, 0.1);
+  color: var(--cyan);
+  font-size: 0.82rem;
+  font-weight: 800;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  border-color: rgba(93, 228, 255, 0.42);
+  background: rgba(93, 228, 255, 0.16);
+}
+
+.field-error {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 117, 145, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 117, 145, 0.1);
+  color: #ffdce4;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
 .auth-check {
   display: flex;
   align-items: center;
