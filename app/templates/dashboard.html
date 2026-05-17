@@ -43,12 +43,23 @@
 
     <div class="mission-card rank-card">
       <h3>Leaderboard rank</h3>
-      <p class="rank-display">{{ rank_label }}</p>
+      <p class="rank-display rank-crown-row">
+        {% if crown_tier %}
+          <span class="rank-crown rank-crown--{{ crown_tier }}" title="Top 3">👑</span>
+        {% endif %}
+        <span class="rank-text">{{ rank_label }}</span>
+      </p>
       <p class="rank-note">
-        {% if public_rank %}
-          Visible on leaderboard.
+        {% if not colony.user.is_public %}
+          Your profile is private. You still see your rank here, but you will not appear on the public leaderboard.
+        {% elif public_rank %}
+          {% if public_rank > 15 %}
+            You are <strong>#{{ public_rank }}</strong> among public commanders. The leaderboard page shows the top 15 only.
+          {% else %}
+            You are in the <strong>top 15</strong> and visible on the leaderboard.
+          {% endif %}
         {% else %}
-          {% if colony.user.is_public %}Not ranked in top 15 yet.{% else %}Profile is private, not visible to public.{% endif %}
+          Play with a public profile to earn a worldwide rank.
         {% endif %}
       </p>
     </div>

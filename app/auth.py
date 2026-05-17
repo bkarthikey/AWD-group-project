@@ -19,7 +19,7 @@ def register():
         return jsonify({"error": "Username, email, and an 8 character password are required."}), 400
 
     if User.query.filter((User.username == username) | (User.email == email)).first():
-        return jsonify({"error": "That username or email is already registered."}), 409
+        return jsonify({"error": "That commander name or email is already registered. Each email may only have one account."}), 409
 
     user = User(username=username, email=email)
     user.set_password(password)
