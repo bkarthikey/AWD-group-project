@@ -19,13 +19,28 @@
     {{ form.email(class="form-control", placeholder="you@example.com") }}
 
     {{ form.password.label }}
-    {{ form.password(class="form-control", placeholder="Create a password") }}
+    <div class="password-field">
+      {{ form.password(class="form-control", placeholder="Create a password") }}
+      <button class="password-toggle" type="button" data-password-toggle="{{ form.password.id }}" aria-label="Show password">Show</button>
+    </div>
 
     {{ form.confirm_password.label }}
-    {{ form.confirm_password(class="form-control", placeholder="Repeat password") }}
+    <div class="password-field">
+      {{ form.confirm_password(class="form-control", placeholder="Repeat password") }}
+      <button class="password-toggle" type="button" data-password-toggle="{{ form.confirm_password.id }}" aria-label="Show confirm password">Show</button>
+    </div>
+    {% if form.confirm_password.errors %}
+      <div class="field-error" role="alert">
+        {{ form.confirm_password.errors[0] }}
+      </div>
+    {% endif %}
 
     {{ form.submit(class="primary-btn full btn") }}
     <p class="auth-switch">Already have an account? <a href="{{ url_for('main.login') }}">Login</a></p>
   </form>
 </main>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/auth.js') }}"></script>
 {% endblock %}
