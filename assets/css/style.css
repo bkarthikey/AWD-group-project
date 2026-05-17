@@ -129,11 +129,64 @@ a {
   font-family: "Orbitron", sans-serif;
   font-weight: 800;
   letter-spacing: 1px;
+  min-width: 0;
 }
 
-.brand span {
+.brand-mark {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.brand-title-accent {
   color: var(--cyan);
   text-shadow: 0 0 20px rgba(93, 228, 255, 0.45);
+}
+
+.navbar .brand.brand--commander.brand--text-only {
+  cursor: default;
+  text-decoration: none;
+  user-select: none;
+  gap: 10px;
+  letter-spacing: 0.04em;
+}
+
+.brand-heading {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2em 0.45em;
+  min-width: 0;
+  max-width: min(100%, 72vw);
+}
+
+.brand-lockup {
+  display: inline-flex;
+  align-items: baseline;
+  white-space: nowrap;
+  min-width: 0;
+  max-width: min(52vw, 18rem);
+}
+
+.brand-username {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.brand-poss {
+  color: rgba(186, 206, 228, 0.95);
+  font-weight: 700;
+  text-shadow: none;
+  flex-shrink: 0;
+}
+
+.brand-product {
+  color: var(--text);
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  font-size: 0.88em;
+  opacity: 0.98;
 }
 
 .nav-links {

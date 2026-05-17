@@ -80,6 +80,9 @@ def test_login_allows_dashboard_access():
 
     assert response.status_code == 200
     assert b"Colony Status" in response.data
+    assert b"brand-username" in response.data
+    assert b"Vega" in response.data
+    assert b"Space Colony" in response.data
 
 
 def test_forgot_password_does_not_change_password_when_email_cannot_send():

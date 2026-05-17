@@ -16,7 +16,22 @@
 
   {% block nav %}
   <nav class="navbar">
-    <a class="brand" href="{{ url_for('main.index') }}">🚀 <span>Space Colony</span></a>
+    {% if current_user.is_authenticated %}
+    <div class="brand brand--commander brand--text-only" aria-label="{{ current_user.username }}'s Space Colony">
+      <span class="brand-mark" aria-hidden="true">🚀</span>
+      <span class="brand-heading">
+        <span class="brand-lockup" title="{{ current_user.username }}">
+          <span class="brand-title-accent brand-username">{{ current_user.username }}</span><span class="brand-poss">'s</span>
+        </span>
+        <span class="brand-product">Space Colony</span>
+      </span>
+    </div>
+    {% else %}
+    <a class="brand" href="{{ url_for('main.index') }}">
+      <span class="brand-mark" aria-hidden="true">🚀</span>
+      <span class="brand-title-accent">Space Colony</span>
+    </a>
+    {% endif %}
     <div class="nav-links">
       {% if current_user.is_authenticated %}
         <a href="{{ url_for('main.dashboard') }}">Dashboard</a>
