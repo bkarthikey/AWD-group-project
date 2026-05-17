@@ -41,6 +41,18 @@
       <p>Resources per second <strong id="rateCount">0</strong></p>
     </div>
 
+    <div class="mission-card rank-card">
+      <h3>Leaderboard rank</h3>
+      <p class="rank-display">{{ rank_label }}</p>
+      <p class="rank-note">
+        {% if public_rank %}
+          Visible on leaderboard.
+        {% else %}
+          {% if colony.user.is_public %}Not ranked in top 15 yet.{% else %}Profile is private, not visible to public.{% endif %}
+        {% endif %}
+      </p>
+    </div>
+
     <div class="mission-card achievements-card">
       <h3>Achievements</h3>
       <div class="achievement-list" id="achievementList"></div>

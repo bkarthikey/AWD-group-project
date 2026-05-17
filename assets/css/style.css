@@ -423,11 +423,20 @@ a {
   display: flex;
   align-items: center;
   gap: 9px;
+  color: var(--text);
 }
 
 .auth-check input {
-  width: auto;
+  width: 18px;
+  height: 18px;
   margin: 0;
+  cursor: pointer;
+  accent-color: var(--cyan);
+}
+
+.auth-check input:focus {
+  outline: 2px solid rgba(93, 228, 255, 0.4);
+  outline-offset: 2px;
 }
 
 .full {
@@ -1653,12 +1662,27 @@ a {
 
 .profile-card {
   padding: 26px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.profile-card.wide {
+  grid-column: 1 / -1;
+}
+
+.profile-card.edit-card {
+  display: grid;
+  gap: 28px;
 }
 
 .profile-card h1,
 .profile-card h2 {
   font-family: "Orbitron", sans-serif;
   margin-bottom: 12px;
+  color: var(--text);
 }
 
 .profile-card p {
@@ -1699,6 +1723,103 @@ a {
 
 .profile-stats span {
   color: var(--muted);
+}
+
+.profile-summary {
+  display: grid;
+  gap: 18px;
+}
+
+.profile-summary .profile-avatar img,
+.leader-avatar {
+  width: 90px;
+  height: 90px;
+  border-radius: 24px;
+  object-fit: cover;
+}
+
+.profile-action {
+  margin-top: 18px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 14px;
+}
+
+.form-grid.two-column {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.profile-card label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.profile-card .form-control {
+  width: 100%;
+  border: 1px solid var(--border);
+  background: rgba(255,255,255,0.07);
+  border-radius: 14px;
+  color: var(--text);
+  padding: 12px 14px;
+  outline: none;
+  font-size: 0.95rem;
+  transition: 0.2s ease;
+}
+
+.profile-card .form-control:focus {
+  color: var(--text);
+  background: rgba(255,255,255,0.09);
+  border-color: rgba(93, 228, 255, 0.4);
+  box-shadow: 0 0 0 0.2rem rgba(93, 228, 255, 0.12);
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 18px;
+}
+
+.leader-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 10px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+}
+
+.leader-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rank-card {
+  padding: 22px;
+}
+
+.rank-display {
+  margin: 14px 0 8px;
+  font-size: 1.5rem;
+  color: var(--cyan);
+}
+
+.rank-note {
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.wide-stats {
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .profile-subheading {
