@@ -23,11 +23,6 @@
         <a href="{{ url_for('main.discussion') }}">Discussion Board</a>
         <a href="{{ url_for('main.leaderboard_page') }}">Leaderboard</a>
         <a href="{{ url_for('main.my_profile') }}">Profile</a>
-        <a href="/settings">Settings/Account</a>
-        <form action="{{ url_for('main.logout') }}" method="post" class="nav-form">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button type="submit" class="nav-logout">Logout</button>
-        </form>
       {% else %}
         <a href="{{ url_for('main.discussion') }}">Discussion Board</a>
         <a href="{{ url_for('main.leaderboard_page') }}">Leaderboard</a>

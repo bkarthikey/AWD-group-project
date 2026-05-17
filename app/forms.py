@@ -14,6 +14,8 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, Email, EqualTo, Length, NumberRange, Optional
 
+from .countries_data import COUNTRY_NAMES
+
 
 class RegisterForm(FlaskForm):
     username = StringField("Commander Name", validators=[DataRequired(), Length(min=3, max=80)])
@@ -33,23 +35,29 @@ class LoginForm(FlaskForm):
     submit = SubmitField("Login")
 
 
-class PrivacyForm(FlaskForm):
-    is_public = BooleanField("Make colony public")
-    submit = SubmitField("Save Privacy")
-
-
 class ProfileForm(FlaskForm):
     username = StringField("Commander Name", validators=[DataRequired(), Length(min=3, max=80)])
     email = EmailField("Email", validators=[DataRequired(), Email()])
     full_name = StringField("Full Name", validators=[Optional(), Length(max=150)])
     date_of_birth = DateField("Date of birth", format="%Y-%m-%d", validators=[Optional()])
-    country = StringField("Country", validators=[Optional(), Length(max=100)])
+    country = SelectField(
+        "Country",
+        choices=[],
+        validators=[Optional()],
+    )
     profile_image = FileField(
         "Profile photo",
         validators=[FileAllowed(["png", "jpg", "jpeg", "gif", "webp"], "Images only.")],
     )
     is_public = BooleanField("Make my profile public and visible on leaderboard")
     submit = SubmitField("Save profile")
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.country.choices = [("", "Optional — shown on leaderboard if set")] + [(c, c) for c in COUNTRY_NAMES]
+        val = self.country.data
+        if val and val not in COUNTRY_NAMES:
+            self.country.choices = self.country.choices + [(val, val)]
 
 
 class PasswordChangeForm(FlaskForm):
